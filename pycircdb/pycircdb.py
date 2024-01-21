@@ -1,12 +1,20 @@
 import sys
 import os
+import rich
 import rich_click as click
 import pandas as pd
 import pyarrow.parquet as pq
 import subprocess
+import logging
+import time
 
 from .utils.helpers import query_parquet
-from .utils import config
+from .utils.ingest import check_circrna
+from .utils import config, log, util_functions, report
+
+# Set up logging
+start_execution_time = time.time()
+logger = config.logger
 
 """ 
     From ~/Desktop/pycircdb
@@ -17,36 +25,98 @@ from .utils import config
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
-click.rich_click.HEADER_TEXT = (
-    f"[dark_orange]///[/] [bold][link=https://github.com/BarryDigby/pycircdb]pycircdb[/link][/] :mag: :loop: :curly_loop: [dim]| v{config.version}"
-)
+click.rich_click.HEADER_TEXT = f"[dark_orange]>>>[/] [bold][link=https://github.com/BarryDigby/pycircdb]pycircdb[/link][/] [dim]| v{config.version}"
 click.rich_click.FOOTER_TEXT = "See [link=https://github.com/BarryDigby/pycircdb]https://github.com/BarryDigby/pycircdb[/] for more details."
 click.rich_click.ERRORS_SUGGESTION = f"This is pycircdb [cyan]v{config.version}[/]\nFor more help, run '[yellow]pycircdb --help[/]' or visit [link=https://github.com/BarryDigby/pycircdb]https://github.com/BarryDigby/pycircdb[/]"
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
 click.rich_click.OPTION_GROUPS = {
     "pycircdb": [
         {
-            "name": "Main options",
+            "name": "Main Options",
+            "options": ["--circRNA", "--miRNA", "--mRNA", "--RBP", "--interactive" ""],
+        },
+        {
+            "name": "Options",
             "options": [
-                "--input",
-                "--reference"
-            ]
-        }
+                "--annotate",
+                "--network",
+                "--ceRNA_network",
+                "--outdir",
+                "--verbose",
+                "--quiet",
+            ],
+        },
+        {
+            "name": "Filtering Options",
+            "options": ["--circRNA_algorithm", "--circRNA_miRNA_DB", "--miRNA_mRNA_DB"],
+        },
     ]
 }
 
-@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.option("-i", "--input", type=click.Path(exists=True, readable=True), required=True, help="Input circRNA list.")
-@click.option("-r", "--reference", type=click.Choice(["hg19", "hg38"]), default="hg19", required=True, help="Reference genome build.")
-@click.option("-o", "--outdir", type=str, help="Output results to the specified output directory.")
-@click.option("-n", "--filename", type=str, help="Append prefix to output filenames.")
-@click.version_option(config.version, prog_name="pycircdb")
 
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.option(
+    "--circRNA",
+    "circRNA",
+    type=click.Path(exists=True, readable=True),
+    help="Input circRNAs",
+)
+@click.option(
+    "--miRNA", "miRNA", type=click.Path(exists=True, readable=True), help="Input miRNAs"
+)
+@click.option(
+    "--mRNA", "mRNA", type=click.Path(exists=True, readable=True), help="Input mRNAs"
+)
+@click.option(
+    "--RBP", "RBP", type=click.Path(exists=True, readable=True), help="Input RBPs"
+)
+@click.option(
+    "--interactive",
+    "interactive",
+    is_flag=True,
+    help="Deploy interactive Streamlit HTML to view results",
+)
+@click.option("--annotate", "annotate", is_flag=True, help="Annotate circRNAs")
+@click.option(
+    "--network", "network", is_flag=True, help="Construct circRNA-miRNA-mRNA network"
+)
+@click.option(
+    "--ceRNA-network",
+    "ceRNA_network",
+    is_flag=True,
+    help="Construct circRNA-miRNA-mRNA ceRNA network",
+)
+@click.option("--outdir", "outdir", type=str, help="Output directory")
+@click.option(
+    "--circRNA-algorithm",
+    "circRNA_algorithm",
+    type=click.Choice(["CIRCexplorer2", "circRNA_finder", "CIRI", "find_circ"]),
+    multiple=True,
+    help="circRNA detection algorithm",
+)
+@click.option(
+    "--circRNA-miRNA-DB",
+    "circRNA_miRNA_DB",
+    type=click.Choice(["miRanda", "TargetScan"]),
+    multiple=True,
+    help="circRNA-miRNA database",
+)
+@click.option(
+    "--miRNA-mRNA-DB",
+    "miRNA_mRNA_DB",
+    type=click.Choice(["miRDB", "miRTarBase", "TarBase", "TargetScan"]),
+    multiple=True,
+    help="miRNA-mRNA database",
+)
+@click.option("--data-dir", "data_dir", is_flag=True, help="Data directory")
+@click.option("--verbose", "verbose", count=True, default=0, help="Verbose output")
+@click.option("--quiet", "quiet", is_flag=True, help="Only show Log warnings")
+@click.version_option(config.version, prog_name="pycircdb")
 def run_cli(**kwargs):
     """
-    pycircdb: a command line tool for rich annotation of circRNAs using publicly available circRNA repsitories.
+    pycircdb: a command line tool that pools publicly available circRNA databases. . . .
 
-    At a minimum, the package accepts as input a list of circRNAs (one per line) and returns a dataframe of annotations for the user. 
+    At a minimum, the package accepts as input a list of circRNAs (one per line) and returns a dataframe of annotations for the user.
 
     '[blue bold]$ pycircdb --input circrna.txt[/]'
     """
@@ -59,18 +129,66 @@ def run_cli(**kwargs):
 
 # Main function that runs pycircdb. Available to use within an interactive Python environment
 def run(
-    input=None,
-    reference=None,
+    circRNA=None,
+    miRNA=None,
+    mRNA=None,
+    RBP=None,
+    annotate=True,
+    network=False,
+    ceRNA_network=False,
     outdir=None,
-    filename=None,
-    **kwargs):
+    circRNA_algorithm=None,
+    circRNA_miRNA_DB=None,
+    miRNA_mRNA_DB=None,
+    verbose=0,
+    no_ansi=False,
+    quiet=False,
+    **kwargs,
+):
     """
     Main run function for pycircdb
     """
 
-    print(f'{input}, {reference}')
+    # Set up logging level
+    loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
+    if quiet:
+        loglevel = "WARNING"
+        config.quiet = True
+    log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
+
+    # Set up rich console
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_terminal=util_functions.force_term_colors(),
+        color_system=None if no_ansi else "auto",
+    )
+    console.print(
+        f"\n[dark_orange]>>>[/] [bold][link=https://github.com/BarryDigby/pycircdb]pycircdb[/link][/] [dim]| v{config.version}\n"
+    )
+
+    # Versions, commands used etc for debug
+    logger.debug(f"This is pycircdb v{config.version}")
+    logger.debug("Running Python " + sys.version.replace("\n", " "))
+    # Log the command used to launch pycircdb
+    report.init()
+    report.pycircdb_command = " ".join(sys.argv)
+    logger.debug(f"Command used: {report.pycircdb_command}")
+
+    # Set up key variables (overwrite config vars from command line)
+    if outdir is not None:
+        config.output_dir = outdir
+
+    # Delete and use config going forward
+    del outdir
+
+    # Set up results directory
+    if not os.path.exists(config.output_dir):
+        os.makedirs(config.output_dir)
+
+    # Assess user inputs
+    check_circrna(circRNA)
 
     sys_exit_code = 0
-
     # return dict for pycircdb_run
     return {"sys_exit_code": sys_exit_code}

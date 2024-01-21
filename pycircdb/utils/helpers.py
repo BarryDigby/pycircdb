@@ -2,6 +2,9 @@ import os
 import pyarrow
 import pyarrow.parquet as pq
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 def query_parquet(
         parquet_file, 
@@ -51,23 +54,3 @@ def query_parquet(
         return parquet_table
 
 
-def detect_circrna_(input):
-    circ_id = input.index.to_series()
-    prefixes = {
-        'ASCRP': 'Arraystar_ID',
-        'hsa_circ_': 'circBase_ID',
-        'hsa-': 'circAtlas_ID',
-        'hsa_circ[a-zA-Z]\w+': 'circBank_ID',
-        'chr': 'Position'
-    }
-    
-    for prefix, identifier in prefixes.items():
-        if circ_id.str.startswith(prefix).any():
-            if circ_id.str.startswith(prefix).all():
-                print(f'All {identifier} IDs')
-                circ_id.name = identifier
-                return circ_id
-            else:
-                sys.exit('Input circRNA matrix contains a mixture of IDs as rownames')
-    
-    sys.exit('Input circRNA matrix contains unrecognized rownames')
