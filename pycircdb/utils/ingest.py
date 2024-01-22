@@ -8,6 +8,8 @@ from pathlib import Path
 import logging
 import csv
 from . import config, helpers
+import pyarrow.parquet as pq
+import pandas as pd
 
 """
     Definitions used for ingesting user input to pycircdb
@@ -16,7 +18,7 @@ from . import config, helpers
 # Initialise the logger
 logger = logging.getLogger(__name__)
 
-databases = ['ArrayStar', 'circBank', 'circBase', 'circAtlas']
+databases = ['ArrayStar', 'circBank', 'circBase', 'circAtlas', 'no database (coordinates)']
 
 def check_circrna(file_in):
 
@@ -68,6 +70,7 @@ def check_circrna(file_in):
             elif re.match(r'^chr([1-9]|1[0-9]|2[0-2]+|X|Y|M):', row[id_name]):
                 valid_rows.append(row)
                 coordinates.append(row[id_name])
+                database_maps["no database (coordinates)"].append(row[id_name])
             else:
                 invalid_rows.append(row)
 
@@ -75,22 +78,77 @@ def check_circrna(file_in):
         database_maps = list(set(database_maps))
         if len(database_maps) == 1:
             logger.info("All of the input circRNA identifiers provided map to " + database_maps[0])
-        elif len(database_maps) < 1:
-            logger.info("User provided a list of circRNAs coordinates as identifiers")
         else:
             logger.info("User provided a mix of circRNA identifiers that map to " + ", ".join(database_maps))
 
         # Check which reference build the coords match to.
-        # clever way to pass arquet file using config here. 
         # User may not know if they are 0-based, 1-based or a mix of both. (CIRI + other tool for e.g)
+        replacements = defaultdict(list)
         if len(coordinates) > 0:
-            logger.info("Checking if the input circRNA coordinates belong to Hg19/Hg38.")
-            if helpers.query_parquet("test_data/annotations.parquet", "hg19", "in", coordinates):
-                logger.info("Input circRNA coordinates belong to Hg19")
-            elif helpers.query_parquet("test_data/annotations.parquet", "hg38", "in", coordinates):
-                logger.info("Input circRNA coordinates belong to Hg38")
-            else:
-                logger.info("Input circRNA coordinates do not match. Trying 0-based and 1-based coordinates for your input.")
+            logger.info("Checking if the input circRNA coordinates belong to Hg19")
+
+            hg19_matches = helpers.query_parquet("test_data/annotations.parquet", "hg19", "in", coordinates, ['hg19']).to_pandas()
+            hg19_matches = hg19_matches['hg19'].to_list()
+            hg19_matches = sorted(list(set(hg19_matches)))
+
+            logger.info("Checking if the input circRNA coordinates belong to Hg38")
+            hg38_matches = helpers.query_parquet("test_data/annotations.parquet", "hg38", "in", coordinates, ['hg38']).to_pandas()
+            hg38_matches = hg38_matches['hg38'].to_list()
+            hg38_matches = sorted(list(set(hg38_matches)))
+
+            coordinates = sorted(list(set(coordinates)))
+
+            # Best case scenario, inputs are sound:
+            if all(item in hg19_matches + hg38_matches for item in coordinates):
+                if hg19_matches is not None:
+                    logger.info("Input circRNA coordinates belong to Hg19")
+                elif hg38_matches is not None:
+                    logger.info("Input circRNA coordinates belong to Hg38")
+            
+            # Fix coordinates and attempt to map for user:
+            elif not all(item in hg19_matches + hg38_matches for item in coordinates):
+                problem_coordinates = [item for item in coordinates if item not in hg19_matches + hg38_matches]
+                logger.info(str(len(problem_coordinates)) + " input circRNA coordinates do not match Hg19 or Hg38. Trying 0-based and 1-based coordinates for your input.")
+                
+                hg19_counter = 0
+                hg38_counter = 0
+                for coordinate in problem_coordinates:
+
+                    zero_based = adjust_coordinates([coordinate], 'subtract')
+                    one_based = adjust_coordinates([coordinate], 'add')
+
+                    zero_19 = helpers.query_parquet("test_data/annotations.parquet", "hg19", "in", zero_based, ['hg19']).to_pandas()['hg19'].drop_duplicates().tolist()
+                    one_19 = helpers.query_parquet("test_data/annotations.parquet", "hg19", "in", one_based, ['hg19']).to_pandas()['hg19'].drop_duplicates().tolist()
+
+                    if len(zero_19 + one_19) > 0:
+                        hg19_counter += 1
+                
+                    zero_38 = helpers.query_parquet("test_data/annotations.parquet", "hg38", "in", zero_based, ['hg38']).to_pandas()['hg38'].drop_duplicates().tolist()
+                    one_38 = helpers.query_parquet("test_data/annotations.parquet", "hg38", "in", one_based, ['hg38']).to_pandas()['hg38'].drop_duplicates().tolist()
+
+                    if len(zero_38 + one_38) > 0:
+                        hg38_counter += 1
+
+                    # name them 
+                    var_dict = {'zero-hg19': zero_19, 'one-hg19': one_19, 'zero-hg38': zero_38, 'one-hg38': one_38}
+                    corrected_coordinate = [list for list in var_dict.values() if list]
+                    replacements[coordinate] = corrected_coordinate[0][0]
+
+
+                if hg19_counter > 0 and hg38_counter == 0:
+                    logger.info("circRNA coordinates corrected and mapped to Hg19")
+                elif hg19_counter == 0 and hg38_counter > 0:
+                    logger.info("circRNA coordinates corrected and mapped to Hg38")
+                else:
+                    logger.info("circRNA coordinates corrected and mapped to both Hg19 and Hg38")
+
+                # Now perform "surgery" on the input file to inject the correct coordinates for the user
+                # must remain within this scope (arraystar probes wont use replacement variable)
+                for row in valid_rows:
+                    # key = orig, value = corrected
+                    for key, values in replacements.items():
+                        if row[id_name] == key:
+                            row[id_name] = values
 
 
         # Basic info about inputs
@@ -100,14 +158,14 @@ def check_circrna(file_in):
         valid_out = Path(config.output_dir + "/valid_inputs" + ext)
         invalid_out = Path(config.output_dir + "/invalid_inputs" + ext)
 
-        if len(valid_rows) > 0:
+        if len(valid_rows) > 0 and len(replacements) > 0:
             with valid_out.open(mode="w", newline="") as out_handle:
                 writer = csv.DictWriter(out_handle, header, delimiter=delim)
                 writer.writeheader()
                 for row in valid_rows:
                     writer.writerow(row)
 
-            logger.info( str(len(valid_rows)) + " valid circRNA identifiers have been written to '" + str(valid_out) + "'")
+            logger.info("Original input (" + str(len(coordinates) - len(replacements)) +") and corrected circRNA identifiers (" + str(len(replacements)) + ") have been written to '" + str(valid_out) + "'")
 
         if len(invalid_rows) > 0:
             with invalid_out.open(mode="w", newline="") as out_handle:
@@ -119,7 +177,20 @@ def check_circrna(file_in):
             logger.info( str(len(invalid_rows)) + " invalid circRNA identifiers have been written to '" + str(invalid_out) + "'")
 
 
-
+def adjust_coordinates(coord_list, operation):
+    adjusted_coords = []
+    for coord in coord_list:
+        chr_part, num_part = coord.split(':')
+        start, end = num_part.split('-')
+        if operation == 'add':
+            adjusted_start = str(int(start) + 1)
+        elif operation == 'subtract':
+            adjusted_start = str(int(start) - 1)
+        else:
+            raise ValueError("Invalid operation. Choose 'add' or 'subtract'.")
+        adjusted_coord = ':'.join([chr_part, '-'.join([adjusted_start, end])])
+        adjusted_coords.append(adjusted_coord)
+    return adjusted_coords
 
 
 def read_head(handle, num_lines=10):
