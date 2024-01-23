@@ -75,11 +75,10 @@ def check_circrna(file_in):
                 invalid_rows.append(row)
 
         # Let user know which databases their inputs map to
-        database_maps = list(set(database_maps))
-        if len(database_maps) == 1:
-            logger.info("All of the input circRNA identifiers provided map to " + database_maps[0])
+        if len(list(set(database_maps))) == 1:
+            logger.info("All of the input circRNA identifiers provided map to " + list(set(database_maps))[0])
         else:
-            logger.info("User provided a mix of circRNA identifiers that map to " + ", ".join(database_maps))
+            logger.info("User provided a mix of circRNA identifiers that map to " + ", ".join(list(set(database_maps))))
 
         # Check which reference build the coords match to.
         # User may not know if they are 0-based, 1-based or a mix of both. (CIRI + other tool for e.g)
@@ -102,11 +101,22 @@ def check_circrna(file_in):
             if all(item in hg19_matches + hg38_matches for item in coordinates):
                 if hg19_matches is not None:
                     logger.info("Input circRNA coordinates belong to Hg19")
+                    database_maps['hg19'] = hg19_matches
+                    del database_maps['no database (coordinates)']
                 elif hg38_matches is not None:
                     logger.info("Input circRNA coordinates belong to Hg38")
+                    database_maps['hg38'] = hg38_matches
+                    del database_maps['no database (coordinates)']
             
             # Fix coordinates and attempt to map for user:
             elif not all(item in hg19_matches + hg38_matches for item in coordinates):
+
+                # Stage the database map here, then extract problem coordinates
+                database_maps['hg19'] = hg19_matches
+                database_maps['hg38'] = hg38_matches
+                del database_maps['no database (coordinates)']
+
+                # Extract problem coordinates
                 problem_coordinates = [item for item in coordinates if item not in hg19_matches + hg38_matches]
                 logger.info(str(len(problem_coordinates)) + " input circRNA coordinates do not match Hg19 or Hg38. Trying 0-based and 1-based coordinates for your input.")
                 
@@ -129,8 +139,15 @@ def check_circrna(file_in):
                     if len(zero_38 + one_38) > 0:
                         hg38_counter += 1
 
-                    # name them 
-                    var_dict = {'zero-hg19': zero_19, 'one-hg19': one_19, 'zero-hg38': zero_38, 'one-hg38': one_38}
+                    # Corrected cooridinate in dict, append to database maps. 
+                    var_dict = {'hg19': zero_19 + one_19, 'hg38': zero_38 + one_38}
+                    if len(var_dict['hg19']) > 0:
+                        database_maps['hg19'].append(var_dict['hg19'][0])
+                    else:
+                        database_maps['hg38'].append(var_dict['hg38'][0])
+
+                    # Isolate corrected coordinate, use to re-write user input file
+                    # {'old_coord': ['new_coord']}
                     corrected_coordinate = [list for list in var_dict.values() if list]
                     replacements[coordinate] = corrected_coordinate[0][0]
 
@@ -175,6 +192,14 @@ def check_circrna(file_in):
                     writer.writerow(row)
 
             logger.info( str(len(invalid_rows)) + " invalid circRNA identifiers have been written to '" + str(invalid_out) + "'")
+
+        
+        # Return the database map. Perform 'surgery' on it upstream within the coordinate scope
+        # Remove a key if its empty
+        database_maps = dict((k, v) for k, v in database_maps.items() if v)
+        
+        return database_maps
+
 
 
 def adjust_coordinates(coord_list, operation):
