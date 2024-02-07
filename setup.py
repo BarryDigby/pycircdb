@@ -7,7 +7,11 @@ setup(
         'click',
         'rich_click',
         'pyarrow',
-        'pandas'
+        'pandas',
+        'dask',
+        'dask[distributed]',
+        'networkx',
+        'pyveplot'
     ],
     entry_points={
         "console_scripts": [

@@ -57,7 +57,10 @@ def query_parquet(
         selection = [(key, operator, value)]
 
         # Query parquet file
-        parquet_table = pq.read_table(parquet_file, filters=selection, columns=columns)
+        if columns:
+            parquet_table = pq.read_table(parquet_file, filters=selection, columns=columns)
+        else:
+            parquet_table = pq.read_table(parquet_file, filters=selection)
 
         # debugging print statement
         #print(parquet_table.to_pandas())

@@ -10,6 +10,7 @@ import time
 
 from .utils.helpers import query_parquet
 from .utils.ingest import check_circrna
+from .utils.annotate import annotate_circRNAs
 from .utils import config, log, util_functions, report
 
 # Set up logging
@@ -33,7 +34,8 @@ click.rich_click.OPTION_GROUPS = {
     "pycircdb": [
         {
             "name": "Main Options",
-            "options": ["--circRNA", "--miRNA", "--mRNA", "--RBP", "--interactive" ""],
+            "options": ["--circRNA", "--miRNA", "--mRNA", "--RBP", "--interactive"],
+            "help": "here is help",
         },
         {
             "name": "Options",
@@ -59,16 +61,25 @@ click.rich_click.OPTION_GROUPS = {
     "--circRNA",
     "circRNA",
     type=click.Path(exists=True, readable=True),
-    help="Input circRNAs",
+    help="Input circRNA file conatining circRNA identifiers in the first column (i.e rownames).\n\nAccepted circRNA identifiers: Hg19, Hg38, ArrayStar, CircBank, CircBase, circAtlas",
 )
 @click.option(
-    "--miRNA", "miRNA", type=click.Path(exists=True, readable=True), help="Input miRNAs"
+    "--miRNA",
+    "miRNA",
+    type=click.Path(exists=True, readable=True),
+    help="Input miRNA file containing miRNA identfiers in the first column (i.e rownames).\n\nAccepted miRNA identifiers: latest miRBase release (hsa-miR-106a-5p/miR-106a-5p)",
 )
 @click.option(
-    "--mRNA", "mRNA", type=click.Path(exists=True, readable=True), help="Input mRNAs"
+    "--mRNA",
+    "mRNA",
+    type=click.Path(exists=True, readable=True),
+    help="Input gene file containing gene identifiers in the first column (i.e rownames).\n\nAccepted gene identifiers: HGNC symbols (REG4, PTEN, etc)",
 )
 @click.option(
-    "--RBP", "RBP", type=click.Path(exists=True, readable=True), help="Input RBPs"
+    "--RBP",
+    "RBP",
+    type=click.Path(exists=True, readable=True),
+    help="Input RNA binding protein file containing RBP identifiers in the first column (i.e rownames).\n\nAccepted RBP identifiers: Gene symbols (ELAVL1, AGO2, etc)",
 )
 @click.option(
     "--interactive",
@@ -76,7 +87,12 @@ click.rich_click.OPTION_GROUPS = {
     is_flag=True,
     help="Deploy interactive Streamlit HTML to view results",
 )
-@click.option("--annotate", "annotate", is_flag=True, help="Annotate circRNAs")
+@click.option(
+    "--annotate",
+    "annotate",
+    is_flag=True,
+    help="Annotate circRNAs passed via `--circRNA` parameter.",
+)
 @click.option(
     "--network", "network", is_flag=True, help="Construct circRNA-miRNA-mRNA network"
 )
@@ -187,7 +203,14 @@ def run(
         os.makedirs(config.output_dir)
 
     # Assess user inputs
-    check_circrna(circRNA)
+    circrnas = check_circrna(circRNA) # returns dict of {'database': ['identifier'], 'database2': ['identifier]}
+    
+    # does the user want to annotate the circRNAs?
+    if annotate:
+        logger.info("Annotating circRNAs")
+        annotate_circRNAs(circrnas)
+    else:
+        logger.info("Skipping circRNA annotation")
 
     sys_exit_code = 0
     # return dict for pycircdb_run
