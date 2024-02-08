@@ -7,7 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 import logging
 import csv
-from . import config, helpers
+from .. import config, helpers
 import pyarrow.parquet as pq
 import pandas as pd
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 databases = ['ArrayStar', 'circBank', 'circBase', 'circAtlas', 'no database (coordinates)']
 
-def check_circrna(file_in):
+def stage_circrna(file_in):
 
     # Stage as file and check its extension
     file_in = Path(file_in)
@@ -215,8 +215,8 @@ def check_circrna(file_in):
         logger.info("User provided " + str(len(valid_rows)) + " valid circRNA identifiers and " + str(len(invalid_rows)) + " invalid circRNA identifiers.")
 
         # Write sep files for the user. Should toggle this on/off via param
-        valid_out = Path(config.output_dir + "/valid_inputs" + ext)
-        invalid_out = Path(config.output_dir + "/invalid_inputs" + ext)
+        valid_out = Path(config.output_dir + "/corrected_circrna" + ext)
+        invalid_out = Path(config.output_dir + "/invalid_circrna" + ext)
 
         if len(valid_rows) > 0 and len(replacements) > 0:
             with valid_out.open(mode="w", newline="") as out_handle:
@@ -234,7 +234,7 @@ def check_circrna(file_in):
                 for row in invalid_rows:
                     writer.writerow(row)
 
-            logger.info( str(len(invalid_rows)) + " invalid circRNA identifiers have been written to '" + str(invalid_out) + "'")
+            logger.info( str(len(invalid_rows)) + " invalid rows have been written to '" + str(invalid_out) + "'")
 
         
         # Return the database map. Perform 'surgery' on it upstream within the coordinate scope
@@ -292,4 +292,4 @@ def sniff_format(handle):
     return dialect
 
 if __name__ == "__main__":
-    check_circrna()
+    stage_circrna()

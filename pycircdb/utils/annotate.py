@@ -67,7 +67,10 @@ def annotate_circRNAs(circrna_dict):
         collect_df.append(df)
 
     # Concatenate the dataframes, output for user.
-    master = pd.concat(collect_df).sort_values(['hg19', 'hg38']).reset_index(drop=True)
+    # Makes sense to drop duplicates entries here 
+    master = pd.concat(collect_df).sort_values(['hg19', 'hg38']).drop_duplicates().reset_index(drop=True)
+
+    logger.info(f'Annotation file created: {config.output_dir}/circrna_annotations.txt')
 
     master.to_csv(f'{config.output_dir}/circrna_annotations.txt', sep="\t", index=False, na_rep="NA")
 
