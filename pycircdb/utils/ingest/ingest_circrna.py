@@ -148,7 +148,7 @@ def stage_circrna(file_in):
 
                 # Extract problem coordinates
                 problem_coordinates = [item for item in coordinates if item not in hg19_matches + hg38_matches]
-                logger.info(str(len(problem_coordinates)) + " input circRNA coordinates do not match Hg19 or Hg38. Trying 0-based and 1-based coordinates for your input.")
+                logger.warning(str(len(problem_coordinates)) + " input circRNA coordinates do not match Hg19 or Hg38. Trying 0-based and 1-based coordinates for your input.")
 
                 # Add strand to OK coordinates - must be after isolating problem or else they are treated as problem
                 for i, coord in enumerate(hg19_matches):
@@ -212,7 +212,7 @@ def stage_circrna(file_in):
 
 
         # Basic info about inputs
-        logger.info("User provided " + str(len(valid_rows)) + " valid circRNA identifiers and " + str(len(invalid_rows)) + " invalid circRNA identifiers.")
+        logger.warning("User provided " + str(len(valid_rows)) + " valid circRNA identifiers and " + str(len(invalid_rows)) + " invalid circRNA identifiers.")
 
         # Write sep files for the user. Should toggle this on/off via param
         valid_out = Path(config.output_dir + "/corrected_circrna" + ext)
@@ -234,7 +234,7 @@ def stage_circrna(file_in):
                 for row in invalid_rows:
                     writer.writerow(row)
 
-            logger.info( str(len(invalid_rows)) + " invalid rows have been written to '" + str(invalid_out) + "'")
+            logger.warning( str(len(invalid_rows)) + " invalid rows have been written to '" + str(invalid_out) + "'")
 
         
         # Return the database map. Perform 'surgery' on it upstream within the coordinate scope

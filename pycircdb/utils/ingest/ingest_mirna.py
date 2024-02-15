@@ -10,7 +10,8 @@ import csv
 from .. import config, helpers
 import pyarrow.parquet as pq
 import pandas as pd
-
+import dask.dataframe as dd
+import dask.distributed
 
 # Initialise the logger
 logger = logging.getLogger(__name__)
@@ -37,47 +38,33 @@ def stage_mirnas(file_in):
         id_name = reader.fieldnames[0]
 
         # Store valid and invalid rows, write if user wants
-        valid_rows = []
-        invalid_rows = []
+        rows = []
         mirna_id = []
 
         # Iterate over dict (rows)
         for row in reader:
 
-            if row[id_name].startswith("hsa-miR"):
-                valid_rows.append(row)
-                mirna_id.append(row[id_name])
-            elif row[id_name].startswith("hsa-let"):
-                valid_rows.append(row)
-                mirna_id.append(row[id_name])
-            elif row[id_name].startswith("miR-"):
-                valid_rows.append(row)
-                mirna_id.append(row[id_name])
-            elif row[id_name].startswith("let-"):
-                valid_rows.append(row)
-                mirna_id.append(row[id_name])
-            else:
-                invalid_rows.append(row)
-
-        if len(valid_rows) == 0:
-            logger.critical("No valid miRNA records found in the input file {}'".format(file_in))
-            logger.critical("Are you sure they are miRBase identifiers? miRBase accessions (MI0000438) are not valid.")
-            return {"config": None, "report":None, "sys_exit_code": 1}
+            rows.append(row)
+            mirna_id.append(row[id_name])
 
         # strip hsa- from strings
         mirna_id = [x.strip('hsa-') for x in mirna_id]
 
-        matching_mirnas = set(helpers.query_parquet("test_data/circ_mirna.parquet", 'miRNA', 'in', mirna_id, ['miRNA']).to_pandas()['miRNA'].tolist())
+        # return list of matches 
+        matching_mirnas = helpers.check_identifiers("/home/barry/Desktop/pycircdb/test_data/mirna_identifiers.txt", mirna_id)
 
         # find items in list that are in the set
         in_database = [x for x in mirna_id if x in matching_mirnas]
         not_in_database = [x for x in mirna_id if x not in matching_mirnas]
 
-        # subset 'valid_rows' list using not_in_database
+        if len(in_database) == 0:
+            logger.critical("No valid miRNA records found in the input file {}'".format(file_in))
+            return {"config": None, "report":None, "sys_exit_code": 1}
+
+        # subset 'rows' list using not_in_database
         # valid rows just means they looked like miRBase IDs, they may not be in the database
         # add dollar to search for end of string
-        bad_entries = [d for d in valid_rows if any(re.search(f'{item}$', v) for item in not_in_database for v in d.values())]
-        bad_entries = bad_entries + invalid_rows
+        bad_entries = [d for d in rows if any(re.search(f'{item}$', v) for item in not_in_database for v in d.values())]
 
 
         invalid_file = Path(config.output_dir + '/invalid_mirna_records' + ext)
@@ -90,15 +77,7 @@ def stage_mirnas(file_in):
                 for row in bad_entries:
                     writer.writerow(row)
 
-
-
-
-        
-
-
-
-        
-
+        return matching_mirnas
 
 
 
@@ -134,4 +113,4 @@ def sniff_format(handle):
 
 
 if __name__ == "__main__":
-    stage_circrna()
+    stage_mirnas()
