@@ -72,7 +72,17 @@ def stage_mrnas(file_in):
             logger.critical("No valid mRNA records found in the input file {}'".format(file_in))
             return {"config": None, "report":None, "sys_exit_code": 1}
 
-        bad_entries = [d for d in rows if any(item in v for item in not_in_database for v in d.values())] 
+        # Split the data into chunks
+        chunk_size = len(rows) // mp.cpu_count()
+        chunks = [rows[i:i + chunk_size] for i in range(0, len(rows), chunk_size)]
+
+        # Create a pool of workers
+        with mp.Pool() as pool:
+            results = pool.starmap(process_chunk, [(chunk, not_in_database) for chunk in chunks])
+
+        bad_entries = [item for sublist in results for item in sublist]
+
+        #bad_entries = [d for d in rows if any(item in v for item in not_in_database for v in d.values())] 
         #bad_entries = [d for d in rows if any(re.search(f'{item}$', v) for item in not_in_database for v in d.values())]
 
         invalid_file = Path(config.output_dir + '/invalid_mrna_records' + ext)

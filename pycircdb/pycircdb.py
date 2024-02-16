@@ -8,12 +8,8 @@ import subprocess
 import logging
 import time
 from itertools import permutations
-from .utils.helpers import query_parquet
-from .utils.ingest.ingest_circrna import stage_circrna
-from .utils.ingest.ingest_mirna import stage_mirnas
-from .utils.ingest.ingest_mrna import stage_mrnas
+from .utils.ingest import stage_inputs
 from .utils.annotate import annotate_circRNAs
-from .utils.build_network import stage_inputs
 from .utils import config, log, util_functions, report
 
 # Set up logging
@@ -62,7 +58,7 @@ click.rich_click.OPTION_GROUPS = {
         },
         {
             "name": "Options",
-            "options": ["--outdir", "--verbose", "--quiet", "--version", "--help"],
+            "options": ["--workers", "--outdir", "--verbose", "--quiet", "--version", "--help"],
         },
     ]
 }
@@ -176,7 +172,7 @@ click.rich_click.OPTION_GROUPS = {
 
 # pycircdb options:
 
-
+@click.option("--workers", "workers", type=int, help="Number of CPUs")
 @click.option("--outdir", "outdir", type=str, help="Output directory")
 @click.option("--verbose", "verbose", count=True, default=0, help="Verbose output")
 @click.option("--quiet", "quiet", is_flag=True, help="Only show Log warnings")
@@ -217,6 +213,7 @@ def run(
     mRNA_algorithm=None,
     mRNA_support=None,
     outdir=None,
+    workers=1,
     verbose=0,
     no_ansi=False,
     quiet=False,
@@ -295,31 +292,12 @@ def run(
         miRNA_algorithm = sorted(uniq)
 
     # Assess user inputs
-    if circRNA is not None:
-        logger.info("Ingesting circRNA file...")
-        circrnas = stage_circrna(
-            circRNA
-        )  # returns dict of {'database': ['identifier'], 'database2': ['identifier]}
-
-    if miRNA is not None:
-        logger.info("Ingesting miRNA file...")
-        miRNA = stage_mirnas(miRNA) # returns list of miRNA IDs, hsa-stripped.
-
-    if mRNA is not None:
-        logger.info("Ingesting mRNA file...")
-        mRNA = stage_mrnas(mRNA)
+    circrna, mirna, mrna, rbp = stage_inputs(circRNA, miRNA, mRNA, RBP, workers)
 
     # does the user want to annotate the circRNAs?
     if annotate:
         logger.info("Annotating circRNAs...")
-        annotate_circRNAs(circrnas)
-
-    # Pass network vars to build network script
-    if circRNA_miRNA:
-        logger.info("Building circRNA-miRNA-mRNA network...")
-        stage_inputs(
-            circrnas, miRNA, mRNA, circRNA_algorithm, circRNA_miRNA_DB, miRNA_mRNA_DB
-        )
+        annotate_circRNAs(circrna)
 
     sys_exit_code = 0
     # return dict for pycircdb_run
