@@ -1,0 +1,10 @@
+## Defaults file, mainly for assessing parameter inputs are okay
+## Do not edit
+
+workers: 1
+circrna_algorithm:
+  - "circexplorer2"
+  - "circrna_finder"
+  - "find_circ"
+  - "ciri"
+

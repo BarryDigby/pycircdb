@@ -8,7 +8,9 @@ import subprocess
 import logging
 import time
 from itertools import permutations
+from .utils.parameter_check import ingest
 from .utils.ingest import stage_inputs
+from .utils.build_network import tester
 from .utils.annotate import annotate_circRNAs
 from .utils import config, log, util_functions, report
 
@@ -48,6 +50,7 @@ click.rich_click.OPTION_GROUPS = {
             "name": "Network filtering options",
             "options": [
                 "--circRNA-algorithm",
+                "--circRNA-set-logic",
                 "--miRNA-algorithm",
                 "--miRNA-type",
                 "--miRNA-MFE",
@@ -104,32 +107,41 @@ click.rich_click.OPTION_GROUPS = {
     "--circRNA-miRNA",
     "circRNA_miRNA",
     is_flag=True,
-    help="Construct circRNA-miRNA network. Requires `--circRNA` or `--miRNA` file.\n\nBoth files can be supplied to subset the network.",
+    help="Construct circRNA-miRNA network. Requires `--circRNA` or `--miRNA` file.\n\nBoth files can be supplied to initialise the network.",
 )
 @click.option(
     "--circRNA-RBP",
     "circRNA_RBP",
     is_flag=True,
-    help="Construct circRNA-RBP network. Requires `--circRNA` or `--RBP` file.\n\nBoth files can be supplied to subset the network.",
+    help="Construct circRNA-RBP network. Requires `--circRNA` or `--RBP` file.\n\nBoth files can be supplied to initialise the network.",
 )
 @click.option(
     "--ceRNA-network",
     "ceRNA_network",
     is_flag=True,
-    help="Construct circRNA-miRNA-mRNA network. Requires `--circRNA`, `--miRNA` or `--mRNA` file.\n\nAny combination of files can be supplied to subset the network.",
+    help="Construct circRNA-miRNA-mRNA network. Requires `--circRNA`, `--miRNA` or `--mRNA` file.\n\nAny combination of files can be supplied to initialise the network.",
 )
 
 # Network filtering options:
 
 @click.option(
     "--circRNA-algorithm",
+    "-ca",
     "circRNA_algorithm",
-    type=click.STRING,
-    multiple=False,
-    help="Subset network using circRNAs detected by any combination of circexplorer2, circrna_finder, ciri or find_circ.\n\nProvide as comma separated list: ciri,find_circ",
+    type=click.Choice(config.circrna_algorithm),
+    multiple=True,
+    help="Subset network using circRNAs detected by circexplorer2, circrna_finder, ciri or find_circ.\n\nCan be specified multiple times: --circRNA-algorithm ciri --circRNA-algorithm circexplorer2",
+)
+@click.option(
+    "--circRNA-set-logic",
+    "circRNA_set_logic",
+    type=click.Choice(["AND", "OR"]),
+    default="AND",
+    help="Set logic to apply to multiple circRNA detection algorithms.\n\nDefault: AND",
 )
 @click.option(
     "--miRNA-algorithm",
+    "-ma",
     "miRNA_algorithm",
     type=click.STRING,
     multiple=False,
@@ -137,6 +149,7 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--miRNA-type",
+    "-mt",
     "miRNA_type",
     type=click.STRING,
     multiple=False,
@@ -144,12 +157,14 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--miRNA-MFE",
+    "-mf",
     "miRNA_MFE",
     type=click.FloatRange(min=-62.0, max=-0.41),
     help="Subset network using circRNA-miRNA interaction minimum free energy (MFE) threshold.\n\nRange: -62.0, -0.41\n\nPlease note this only applies to circRNA-miRNA interactions predicted by miRanda.",
 )
 @click.option(
     "--miRNA-score",
+    "-ms",
     "miRNA_score",
     type=click.FloatRange(min=140.0, max=220.0),
     multiple=False,
@@ -158,6 +173,7 @@ click.rich_click.OPTION_GROUPS = {
 
 @click.option(
     "--mRNA-algorithm",
+    "-ga",
     "mRNA_algorithm",
     type=click.STRING,
     multiple=False,
@@ -165,6 +181,7 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--mRNA-support",
+    "-gs",
     "mRNA_support",
     type=click.STRING,
     help="Functional MTI etc. . . ",
@@ -172,11 +189,11 @@ click.rich_click.OPTION_GROUPS = {
 
 # pycircdb options:
 
-@click.option("--workers", "workers", type=int, help="Number of CPUs")
-@click.option("--outdir", "outdir", type=str, help="Output directory")
+@click.option("--workers", "-c", "workers", type=int, help="Number of cores")
+@click.option("--outdir", "-o", "outdir", type=str, help="Output directory")
 @click.option("--verbose", "verbose", count=True, default=0, help="Verbose output")
 @click.option("--quiet", "quiet", is_flag=True, help="Only show Log warnings")
-@click.option("--version", "version", is_flag=True, help="Show version and exit")
+@click.option("--version", "-v", "version", is_flag=True, help="Show version and exit")
 @click.version_option(config.version, prog_name="pycircdb")
 
 
@@ -206,6 +223,7 @@ def run(
     circRNA_RBP=False,
     ceRNA_network=False,
     circRNA_algorithm=None,
+    circRNA_set_logic=None,
     miRNA_algorithm=None,
     miRNA_type=None,
     miRNA_MFE=None,
@@ -213,7 +231,7 @@ def run(
     mRNA_algorithm=None,
     mRNA_support=None,
     outdir=None,
-    workers=1,
+    workers=None,
     verbose=0,
     no_ansi=False,
     quiet=False,
@@ -251,53 +269,39 @@ def run(
     # Set up key variables (overwrite config vars from command line)
     if outdir is not None:
         config.output_dir = outdir
+    if workers is not None:
+        config.workers = workers
+    if annotate is not None:
+        config.annotate = annotate
+    if circRNA_algorithm is not None:
+        config.circrna_algorithm = circRNA_algorithm
+    if circRNA_set_logic is not None:
+        config.circrna_set_logic = circRNA_set_logic
 
     # Delete and use config going forward
     del outdir
+    del workers
+    del annotate
+    del circRNA_algorithm
+    del circRNA_set_logic
 
     # Set up results directory
     if not os.path.exists(config.output_dir):
         os.makedirs(config.output_dir)
 
-    # sanity check on parameters
-    if circRNA is None and annotate:
-        logger.critical(
-            "You have chosen `--annotate` but have not provided file to `--circRNA`. "
-            "Please see `pycircdb --help` "
-        )
-        return {"report": None, "config": None, "sys_exit_code": 1}
-    
-    # double check filtering options, too verbose to print to help
-
-    circrna_algorithms = ['circexplorer2', 'circrna_finder', 'ciri', 'find_circ']
-
-    if circRNA_algorithm is not None:
-        uniq = circRNA_algorithm.split(',')
-        invalid = [x for x in uniq if x not in circrna_algorithms]
-        if len(invalid) > 0:
-            logger.critical("Invalid parameter(s) provided to `--circRNA-algorithms`: {} ".format(','.join(invalid)))
-            logger.critical("Please select from the following: {}".format(','.join(circrna_algorithms)))
-            return {"report": None, "config": None, "sys_exit_code": 1}
-        circRNA_algorithm = sorted(uniq)
-
-    miRNA_algorithms = ['miRanda', 'TargetScan']
-
-    if miRNA_algorithm is not None:
-        uniq = miRNA_algorithm.split(',')
-        invalid = [x for x in uniq if x not in miRNA_algorithms]
-        if len(invalid) > 0:
-            logger.critical("Invalid parameter(s) provided to `--miRNA-algorithm`: {} ".format(','.join(invalid)))
-            logger.critical("Please select from the following: {}".format(','.join(miRNA_algorithms)))
-            return {"report": None, "config": None, "sys_exit_code": 1}
-        miRNA_algorithm = sorted(uniq)
-
     # Assess user inputs
-    circrna, mirna, mrna, rbp = stage_inputs(circRNA, miRNA, mRNA, RBP, workers)
+    circrna, mirna, mrna, rbp = stage_inputs(circRNA, miRNA, mRNA, RBP, config.workers)
 
-    # does the user want to annotate the circRNAs?
-    if annotate:
-        logger.info("Annotating circRNAs...")
-        annotate_circRNAs(circrna)
+    # This is actually subsetting circRNAs, could be renamed in refactor
+    # Subsets entire parquet file, not just the hg38 column.. 
+    # applies algorithm subsets to the dataframe. 
+    # write to file if annotate true. We need this module to run independent of the parameter.
+    subset_circrnas = annotate_circRNAs(config.annotate, circrna, config.circrna_algorithm, config.circrna_set_logic)
+
+    # test building network
+    # start with circRNA - miRNAs
+    tester(circrna, mirna)
+    
 
     sys_exit_code = 0
     # return dict for pycircdb_run

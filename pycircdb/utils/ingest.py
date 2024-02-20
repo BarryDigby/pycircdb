@@ -15,12 +15,19 @@ import multiprocessing as mp
 logger = logging.getLogger(__name__)
 
 
-def stage_inputs(circRNA=None, miRNA=None, mRNA=None, RBP=None, workers=1):
+def stage_inputs(circRNA=None, miRNA=None, mRNA=None, RBP=None, workers=None):
     """
     Script entry point, utilises functions below
     to remove entries from user that != databases.
     Makes effort to correct when circRNAs provided.
     Outputs:
+
+    circna: dict
+        Dictionary containing {'hg38_id':'original_input_id'...}
+        Used to build networks and write data using original user input.
+    mirna/mrna/rbp: list
+        A list containing identifiers present in the databases and thus
+        valid for downstream network construction.
     """
     if circRNA is not None:
         logger.info("Ingesting circRNAs...")
@@ -30,7 +37,7 @@ def stage_inputs(circRNA=None, miRNA=None, mRNA=None, RBP=None, workers=1):
 
     if miRNA is not None:
         logger.info('Ingesting miRNAs...')
-        mirna = ingest_others(miRNA, 1, "miRNA")
+        mirna = ingest_others(miRNA, workers, "miRNA")
     else:
         mirna = None
 
@@ -40,15 +47,13 @@ def stage_inputs(circRNA=None, miRNA=None, mRNA=None, RBP=None, workers=1):
     else:
         mrna = None
 
-
     if RBP is not None:
         logger.info('Ingesting RBPs...')
-        rbp = ingest_others(RBP, 1, "RBP")
+        rbp = ingest_others(RBP, workers, "RBP")
     else:
         rbp = None
 
     return circrna, mirna, mrna, rbp
-
 
 def ingest_circrna(file_in):
     # Stage as file and check its extension
@@ -104,14 +109,20 @@ def ingest_circrna(file_in):
             else:
                 invalid_rows.append(row)
 
+        # total ids 
+        totals = sum(len(v) for v in database_maps.values())
+        totals = totals + len(invalid_rows)
+        logger.info(f"User provided {totals} circRNA records")
+
+
         # Let user know which databases their inputs map to
         if len(list(set(database_maps))) == 1:
-            logger.info(
+            logger.debug(
                 "All of the input circRNA identifiers likely map to "
                 + list(set(database_maps))[0]
             )
         else:
-            logger.info(
+            logger.debug(
                 "User provided a mix of circRNA identifiers that likely map to "
                 + ", ".join(list(set(database_maps)))
             )
@@ -120,7 +131,7 @@ def ingest_circrna(file_in):
         # User may not know if they are 0-based, 1-based or a mix of both. (CIRI + other tool for e.g)
         replacements = defaultdict(list)
         if len(coordinates) > 0:
-            logger.info("Checking if the input circRNA coordinates belong to Hg19")
+            logger.debug("Checking if the input circRNA coordinates belong to Hg19")
 
             # Remove the strand info when performing DB matches.
             # but store in a dict as we need it later.
@@ -140,7 +151,7 @@ def ingest_circrna(file_in):
             hg19_matches = hg19_matches["hg19"].to_list()
             hg19_matches = sorted(list(set(hg19_matches)))
 
-            logger.info("Checking if the input circRNA coordinates belong to Hg38")
+            logger.debug("Checking if the input circRNA coordinates belong to Hg38")
             hg38_matches = helpers.query_parquet(
                 "test_data/annotations.parquet", "hg38", "in", coordinates, ["hg38"]
             ).to_pandas()
@@ -162,11 +173,11 @@ def ingest_circrna(file_in):
 
                 # populate output dict.
                 if hg19_matches is not None:
-                    logger.info("Input circRNA coordinates belong to Hg19")
+                    logger.debug("Input circRNA coordinates belong to Hg19")
                     database_maps["hg19"] = hg19_matches
                     del database_maps["no database (coordinates)"]
                 elif hg38_matches is not None:
-                    logger.info("Input circRNA coordinates belong to Hg38")
+                    logger.debug("Input circRNA coordinates belong to Hg38")
                     database_maps["hg38"] = hg38_matches
                     del database_maps["no database (coordinates)"]
 
@@ -183,7 +194,7 @@ def ingest_circrna(file_in):
                     for item in coordinates
                     if item not in hg19_matches + hg38_matches
                 ]
-                logger.warning(
+                logger.debug(
                     str(len(problem_coordinates))
                     + " input circRNA coordinates do not match Hg19 or Hg38. Trying 0-based and 1-based coordinates for your input."
                 )
@@ -281,11 +292,11 @@ def ingest_circrna(file_in):
                     replacements[coordinate] = corrected_coordinate[0][0]
 
                 if hg19_counter > 0 and hg38_counter == 0:
-                    logger.info("circRNA coordinates corrected and mapped to Hg19")
+                    logger.debug("circRNA coordinates corrected and mapped to Hg19")
                 elif hg19_counter == 0 and hg38_counter > 0:
-                    logger.info("circRNA coordinates corrected and mapped to Hg38")
+                    logger.debug("circRNA coordinates corrected and mapped to Hg38")
                 else:
-                    logger.info(
+                    logger.debug(
                         "circRNA coordinates corrected and mapped to both Hg19 and Hg38"
                     )
 
@@ -298,17 +309,31 @@ def ingest_circrna(file_in):
                             row[id_name] = values
 
         # Basic info about inputs
-        logger.warning(
-            "User provided "
-            + str(len(valid_rows))
-            + " valid circRNA identifiers and "
-            + str(len(invalid_rows))
-            + " invalid circRNA identifiers."
-        )
+        logger.info(
+            str(len(valid_rows))
+            + " circRNAs match the pycircdb database"
+            )
+        
+        logger.info(
+            str(len(invalid_rows))
+            + " circRNA records were not found in the pycircdb database"
+            )
 
         # Write sep files for the user. Should toggle this on/off via param
         valid_out = Path(config.output_dir + "/corrected_circrna" + ext)
         invalid_out = Path(config.output_dir + "/invalid_circrna" + ext)
+
+        if len(invalid_rows) > 0:
+            with invalid_out.open(mode="w", newline="") as out_handle:
+                writer = csv.DictWriter(out_handle, header, delimiter=delim)
+                writer.writeheader()
+                for row in invalid_rows:
+                    writer.writerow(row)
+
+            logger.info(
+                "Writing invalid circRNA records to "
+                + str(invalid_out)
+            )
 
         if len(valid_rows) > 0 and len(replacements) > 0:
             with valid_out.open(mode="w", newline="") as out_handle:
@@ -318,34 +343,40 @@ def ingest_circrna(file_in):
                     writer.writerow(row)
 
             logger.info(
-                "Original input ("
-                + str(len(coordinates) - len(replacements))
-                + ") and corrected circRNA identifiers ("
+                "pycircdb has fixed "
                 + str(len(replacements))
-                + ") have been written to '"
+                + " circRNA records and written to "
                 + str(valid_out)
-                + "'"
-            )
-
-        if len(invalid_rows) > 0:
-            with invalid_out.open(mode="w", newline="") as out_handle:
-                writer = csv.DictWriter(out_handle, header, delimiter=delim)
-                writer.writeheader()
-                for row in invalid_rows:
-                    writer.writerow(row)
-
-            logger.warning(
-                str(len(invalid_rows))
-                + " invalid identifiers have been written to '"
-                + str(invalid_out)
-                + "'"
             )
 
         # Return the database map. Perform 'surgery' on it upstream within the coordinate scope
         # Remove a key if its empty
         database_maps = dict((k, v) for k, v in database_maps.items() if v)
 
-        return database_maps
+        # output hg38 : original input so we can access downstream DB using
+        # hg38, and write results using original input.
+        # database maps contains all valid circRNA identifiers..
+
+        result = defaultdict(list)
+
+        for k, v in database_maps.items():
+            if k == "hg38":
+                for i in v:
+                    coords = i.split(":")
+                    result[coords[0:2]].append(i)
+            elif k =="hg19":
+                for i in v:
+                    coords = i.split(":")
+                    query = helpers.query_parquet("test_data/annotations.parquet", k, "in", [":".join(coords[0:2])], ["hg38", k]).to_pandas().drop_duplicates()
+                    result[query["hg38"].iloc[0]].append(i)
+            else:
+                query = helpers.query_parquet("test_data/annotations.parquet", k, "in", v, ["hg38", k]).to_pandas().drop_duplicates()
+                for row in query.iterrows():
+                    result[row[1]["hg38"]].append(row[1][k])
+
+        # convert to traditional dict:
+        res = {k: v[0] for k, v in result.items()}
+        return res
 
 def ingest_others(file_in, workers, type):
     
@@ -380,7 +411,7 @@ def ingest_others(file_in, workers, type):
 
         if type == "miRNA":
             # strip hsa- from strings
-            ids = [x.strip('hsa-') for x in ids]
+            ids = [re.sub('^hsa-', '', x) for x in ids]
 
         # return list of matches
         if type == "miRNA":
@@ -389,12 +420,15 @@ def ingest_others(file_in, workers, type):
             id_file = Path("/home/barry/Desktop/pycircdb/test_data/mrna_identifiers.txt")
         elif type == "RBP":
             id_file = Path("/home/barry/Desktop/pycircdb/test_data/rbp_identifiers.txt")
-        
+
+        logger.info(f'User provided {len(ids)} {type} records')
+
         matching_identifiers = helpers.check_identifiers(id_file, ids)
 
         # find items in list that are in the set
         in_database = [x for x in ids if x in matching_identifiers]
         not_in_database = [x for x in ids if x not in matching_identifiers]
+
 
         if len(in_database) == 0:
             logger.critical(f"No valid {type} records found in the input file {file_in}'")
@@ -412,14 +446,15 @@ def ingest_others(file_in, workers, type):
             bad_entries = [item for sublist in results for item in sublist]
         
         else:
-            
+            #justify using a regex search here. the ID is either in the database or it isnt?!
             bad_entries = [d for d in rows if any(re.search(f'{item}$', v) for item in not_in_database for v in d.values())]
+ 
 
-
+        logger.info(f'{len(in_database)} {type}s match the pycircdb database')
         invalid_file = Path(config.output_dir + f'/invalid_{type}_records' + ext)
         if len(bad_entries) > 0:
-            logger.warning(f"{len(bad_entries)} {type}s were not found in the database")
-            logger.warning(f"Writing invalid {type}s records to {invalid_file}")
+            logger.info(f"{len(bad_entries)} {type}s were not found in the pycircdb database")
+            logger.info(f"Writing invalid {type} records to {invalid_file}")
             with invalid_file.open("w", newline="") as out_handle:
                 writer = csv.DictWriter(out_handle, fieldnames=header, delimiter=delim)
                 writer.writeheader()
@@ -454,7 +489,6 @@ def adjust_coordinates(coord_list, operation):
         adjusted_coords.append(adjusted_coord)
     return adjusted_coords
 
-
 def read_head(handle, num_lines=10):
     """
     Read n lines from current position in file
@@ -465,7 +499,6 @@ def read_head(handle, num_lines=10):
             break
         lines.append(line)
     return "".join(lines)
-
 
 def sniff_format(handle):
     """
@@ -485,7 +518,6 @@ def sniff_format(handle):
         dialect.delimiter = "\t"
 
     return dialect
-
 
 if __name__ == "__main__":
     stage_inputs()

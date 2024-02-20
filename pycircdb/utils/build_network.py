@@ -1,40 +1,39 @@
 #!/usr/bin/env python
 
-
 import logging
 from . import config, helpers
 import pandas as pd
+import dask.dataframe as dd
+from distributed import Client
+from pathlib import Path
 
 """
-    Set of functions for constructing a circRNA-miRNA-mRNA network
-
-    1. Basic - just circRNA inputs. Network can be refined by circRNA algorithm confidence, 
-        miRNA prediction tool confidence, and miRNA-mRNA interaction confidence.
-
-    2. User provides input miRNA or both mRNA files which will be used to subset the network. 
-
-
-    This will get complicated when user has different inputs i.e starting at mRNA..
-    Just start coding it up and logic will become more apparent. 
+    go back to circrna ingest and make a key value pair hg38 > original input?
+    or do you just go forward with hg38 , any need to preserve the original probe ID? 
+    yes there is actually if they want to keep ASC etc.. 
 """
 
 # Initialise the logger
 logger = logging.getLogger(__name__)
 
 
-def stage_inputs(circrna=None,
-                mirna=None, 
-                mrna=None, 
-                circ_algorithm=None, 
-                mirna_algorithm=None, 
-                mrna_algorithm=None):
+def tester(circrna=None, mirna=None):
 
 
-    # User has provided circRNA file and wants to build network without filters
-    if circrna and all(var is None for var in [mirna, mrna, circ_algorithm, mirna_algorithm, mrna_algorithm]):
-        print(circrna)
+    # build simple network - circRNA as input
+    # testing dask here...
+    circrna_mirna(circrna, mirna)
+    
+
+
+def circrna_mirna(circrna, mirna):
+
+    client = Client(n_workers=4, threads_per_worker=1)
+
+    client.close()
+
 
 
 
 if __name__ == "__main__":
-    stage_inputs()
+    tester()

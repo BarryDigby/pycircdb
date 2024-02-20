@@ -13,66 +13,93 @@ from collections import defaultdict
 # Initialise the logger
 logger = logging.getLogger(__name__)
 
-def annotate_circRNAs(circrna_dict):
 
+def annotate_circRNAs(annotate, circrna_dict, algorithms=None, set_logic=None):
+    # {'hg38_id':'original_input_id'...}
+    # take care to note strand information to subset results (prior to CLI param subsets)
+    # create coordinate DF, subset by strand if required, add to other annotation dbs. 
+
+    contains_strand = defaultdict(list)
+    no_strand = []
     collect_df = []
 
-    # Iterate over the key-value pairs in the dictionary
-    for database, identifier in circrna_dict.items():
-
+    for hg38, original_id in circrna_dict.items():
         # check if strands are present if positonal identifiers used
-        if ':+' in identifier or ':-' in identifier:
-            position_strand = defaultdict(list)
-            for item in identifier:
-                if len(item.split(':')) == 2:
-                    position = f'{item.split(":")[0]}:{item.split(":")[1]}'
-                    position_strand[position].append('')
-                else:
-                    position = f'{item.split(":")[0]}:{item.split(":")[1]}'
-                    position_strand[position].append(item.split(":")[2])
+        if ":+" in original_id or ":-" in original_id:
+            contains_strand[hg38].append(original_id.split(":")[2])
+        else:
+            no_strand.append(hg38)
 
-            # note user may have supplied coordinate with two strands (circRNA_finder)
-            positions = list(position_strand.keys())
+    # this will not need to be run if DB ID's are input
+    if len(contains_strand) > 0:
+        strand_df = helpers.query_parquet(
+            parquet_file="test_data/annotations.parquet",
+            key='hg38',
+            operator="in",
+            value=list(contains_strand.keys()),
+            columns=None,
+            ).to_pandas()
 
-            #subset the parquet file
-            df = helpers.query_parquet(
-            parquet_file='test_data/annotations.parquet',
-            key=database,
-            operator='in',
-            value=positions,
-            columns=None).to_pandas()
+        # create hg19/hg38 + strand column
+        strand_df["tmp"] = strand_df["hg19"] + ":" + strand_df["strand"]
+        strand_df["tmp2"] = strand_df["hg38"] + ":" + strand_df["strand"]
 
-            # create hg19/hg38 + strand column
-            df['tmp'] = df['hg19'] + ':' + df['strand']
-            df['tmp2'] = df['hg38'] + ':' + df['strand']
+        # 'expand' dictionary key vals to string list to check against tmp columns
+        # only append ":{strand}" to position if strand is present
+        lst = []
+        for position, strand in contains_strand.items():
+            if strand[0] in ['+', '-']:
+                lst.append(f"{position}:{strand[0]}")
+            else:
+                lst.append(f"{position}")
 
-            # 'expand' dictionary key vals to string list to check against tmp columns
-            lst = [f'{position}:{strand}' for position, values in position_strand.items() for strand in values]
-            df = df.loc[df['tmp'].isin(lst) | df['tmp2'].isin(lst)]
+        strand_df = strand_df.loc[strand_df["tmp"].isin(lst) | strand_df["tmp2"].isin(lst)]
 
-            # drop the temporary columns
-            df.drop(columns=['tmp', 'tmp2'], inplace=True)
+        # drop the temporary columns
+        strand_df.drop(columns=["tmp", "tmp2"], inplace=True)
 
-            collect_df.append(df)
+        collect_df.append(strand_df)
 
+    # now grab the other annotations and concat them 
+    df =  helpers.query_parquet(
+        parquet_file="test_data/annotations.parquet",
+        key='hg38',
+        operator="in",
+        value=no_strand,
+        columns=None,
+        ).to_pandas()
+    
+    collect_df = [df] + collect_df
 
-        #subset the parquet file
-        df = helpers.query_parquet(
-            parquet_file='test_data/annotations.parquet',
-            key=database,
-            operator='in',
-            value=identifier,
-            columns=None).to_pandas()
+    master = pd.concat(collect_df).sort_values(['hg19', 'hg38']).reset_index(drop=True)
 
-        collect_df.append(df)
+    if annotate:
+        logger.info(f"Annotation file created: {config.output_dir}/circrna_annotations.txt")
+        master.to_csv(f"{config.output_dir}/circrna_annotations.txt",sep="\t",index=False,na_rep="NA")
 
-    # Concatenate the dataframes, output for user.
-    # Makes sense to drop duplicates entries here 
-    master = pd.concat(collect_df).sort_values(['hg19', 'hg38']).drop_duplicates().reset_index(drop=True)
+    # Now create subset and export this to downstream modules. Write it for the user too.
+    if algorithms is not None and set_logic is None:
+        mask = pd.Series([all(word in item for word in algorithms) for item in master['algorithm']])
+        subset_df = master[mask]
+        if annotate:
+            subset_df.to_csv(f"{config.output_dir}/filtered_circrna_annotations_subset.txt", sep="\t", index=False, na_rep="NA")
+    elif algorithms is not None and set_logic is not None:
+        if set_logic == "OR":
+            subset_df = master[master['algorithm'].str.contains('|'.join(algorithms), case=False, na=False)]
+            if annotate:
+                subset_df.to_csv(f"{config.output_dir}/filtered_circrna_annotations_subset.txt", sep="\t", index=False, na_rep="NA")
+        elif set_logic == "AND":
+            mask = pd.Series([all(word in item for word in algorithms) for item in master['algorithm']])
+            subset_df = master[mask]
+            if annotate:
+                subset_df.to_csv(f"{config.output_dir}/filtered_circrna_annotations_subset.txt", sep="\t", index=False, na_rep="NA")
 
-    logger.info(f'Annotation file created: {config.output_dir}/circrna_annotations.txt')
+    # subset the original input if algorithms were appplied.
+    if algorithms is not None:
+        circrna_dict = {k: v for k, v in circrna_dict.items() if k in subset_df['hg38'].tolist()}
 
-    master.to_csv(f'{config.output_dir}/circrna_annotations.txt', sep="\t", index=False, na_rep="NA")
+    return circrna_dict
+
 
 if __name__ == "__main__":
     annotate_circRNAs()
