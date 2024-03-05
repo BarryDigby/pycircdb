@@ -1,3 +1,4 @@
+results/filtered_mirna.csv
 test_data/mirna_chrs/chr2.parquet
 test_data/mirna_chrs/chr16.parquet
 test_data/mirna_chrs/chr22.parquet
@@ -22,7 +23,7 @@ test_data/mirna_chrs/chr5.parquet
 test_data/circ_mirna.parquet
 test_data/annotations.parquet
 test_data/circ_rbp.parquet
-venv/lib/python3.10/site-packages/pyarrow/libarrow.so.1400
+venv/lib/python3.10/site-packages/pyarrow/libarrow.so.1500
 venv/lib/python3.10/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so
 venv/lib/python3.10/site-packages/scipy.libs/libopenblasp-r0-23e5df77.3.21.dev.so
 results/old_res/

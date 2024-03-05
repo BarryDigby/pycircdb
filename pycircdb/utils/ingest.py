@@ -14,12 +14,12 @@ import multiprocessing as mp
 # Initialise the logger
 logger = logging.getLogger(__name__)
 
-
-def stage_inputs(circRNA=None, miRNA=None, mRNA=None, RBP=None, workers=None):
+def stage_inputs(circrna_file=None, mirna_file=None, gene_file=None, rbp_file=None, workers=None):
     """
     Script entry point, utilises functions below
     to remove entries from user that != databases.
     Makes effort to correct when circRNAs provided.
+
     Outputs:
 
     circna: dict
@@ -29,103 +29,69 @@ def stage_inputs(circRNA=None, miRNA=None, mRNA=None, RBP=None, workers=None):
         A list containing identifiers present in the databases and thus
         valid for downstream network construction.
     """
-    if circRNA is not None:
-        logger.info("Ingesting circRNAs...")
-        circrna = ingest_circrna(circRNA)
-    else:
-        circrna = None
 
-    if miRNA is not None:
-        logger.info('Ingesting miRNAs...')
-        mirna = ingest_others(miRNA, workers, "miRNA")
-    else:
-        mirna = None
+    circrna_dict = mirna_list = gene_list = rbp_list = None
 
-    if mRNA is not None:
-        logger.info('Ingesting mRNAs...')
-        mrna = ingest_others(mRNA, workers, "mRNA")
-    else:
-        mrna = None
+    if circrna_file is not None:
+        logger.info("Ingesting circRNA file...")
+        circrna_dict = ingest_circrna(circrna_file)
 
-    if RBP is not None:
+    if mirna_file is not None:
+        logger.info('Ingesting miRNA file...')
+        mirna_list = ingest_others(mirna_file, workers, "miRNA")
+
+    if gene_file is not None:
+        logger.info('Ingesting genes...')
+        gene_list = ingest_others(gene_file, workers, "gene")
+
+    if rbp_file is not None:
         logger.info('Ingesting RBPs...')
-        rbp = ingest_others(RBP, workers, "RBP")
-    else:
-        rbp = None
+        rbp_list = ingest_others(rbp_file, workers, "RBP")
 
-    return circrna, mirna, mrna, rbp
+    return circrna_dict, mirna_list, gene_list, rbp_list
 
 def ingest_circrna(file_in):
-    # Stage as file and check its extension
-    file_in = Path(file_in)
-    _, ext = os.path.splitext(file_in)
-    assert ext in [".csv", ".txt", ".tsv"], logger.error(
-        "Input circRNA file '{file}' is not a valid text file. Please provide a valid text file with extension '.csv', '.txt', or '.tsv'."
-    )
+    """
+    Frankenstein code, forgive me... 
+    """
 
-    # Open file handle - all file reading operations go below.
-    with file_in.open(newline="") as in_handle:
-        # Stage lines to dict
-        dialect = sniff_format(in_handle)
-        reader = csv.DictReader(in_handle, dialect=dialect)
+    file_path = Path(file_in)
+    _, ext = os.path.splitext(file_path)
 
-        # store for writing corrected files
-        delim = dialect.delimiter
-        header = list(reader.fieldnames)
+    with file_path.open(newline="") as in_handle:
 
-        # hard-code for access
-        id_name = reader.fieldnames[0]
+        file_dialect = sniff_format(in_handle)
+        file_reader = csv.DictReader(in_handle, dialect=file_dialect)
+        delim = file_dialect.delimiter
+        header = list(file_reader.fieldnames)
 
-        # Stage list to assess what identifiers map to which database
+        identifier_colname = file_reader.fieldnames[0]
+
         database_maps = defaultdict(list)
-
-        # Store valid and invalid rows, write corrected, invlids for user.
         valid_rows = []
         invalid_rows = []
-
-        # Store coordinates seperately. Add to database maps when ref build determined.
         coordinates = []
 
-        # Iterate over dict (rows)
-        for row in reader:
-            if row[id_name].startswith("ASCRP"):
+        for row in file_reader:
+
+            if row[identifier_colname].startswith("ASCRP"):
                 valid_rows.append(row)
-                database_maps["ArrayStar"].append(row[id_name])
-            elif row[id_name].startswith("hsa_circ_") and row[id_name][9].isdigit():
+                database_maps["ArrayStar"].append(row[identifier_colname])
+            elif row[identifier_colname].startswith("hsa_circ_") and row[identifier_colname][9].isdigit():
                 valid_rows.append(row)
-                database_maps["circBase"].append(row[id_name])
-            elif row[id_name].startswith("hsa-"):
+                database_maps["circBase"].append(row[identifier_colname])
+            elif row[identifier_colname].startswith("hsa-"):
                 valid_rows.append(row)
-                database_maps["circAtlas"].append(row[id_name])
-            elif re.match(r"hsa_circ[a-zA-Z]\w+", row[id_name]) or row[
-                id_name
-            ].startswith("hsa_circ_chr"):
+                database_maps["circAtlas"].append(row[identifier_colname])
+            elif re.match(r"hsa_circ[a-zA-Z]\w+", row[identifier_colname]) or row[identifier_colname].startswith("hsa_circ_chr"):
                 valid_rows.append(row)
-                database_maps["circBank"].append(row[id_name])
-            elif re.match(r"^chr([1-9]|1[0-9]|2[0-2]+|X|Y|M):", row[id_name]):
+                database_maps["circBank"].append(row[identifier_colname])
+            elif re.match(r"^chr([1-9]|1[0-9]|2[0-2]+|X|Y|M):", row[identifier_colname]):
                 valid_rows.append(row)
-                coordinates.append(row[id_name])
-                database_maps["no database (coordinates)"].append(row[id_name])
+                coordinates.append(row[identifier_colname])
+                database_maps["no database (coordinates)"].append(row[identifier_colname])
             else:
                 invalid_rows.append(row)
-
-        # total ids 
-        totals = sum(len(v) for v in database_maps.values())
-        totals = totals + len(invalid_rows)
-        logger.info(f"User provided {totals} circRNA records")
-
-
-        # Let user know which databases their inputs map to
-        if len(list(set(database_maps))) == 1:
-            logger.debug(
-                "All of the input circRNA identifiers likely map to "
-                + list(set(database_maps))[0]
-            )
-        else:
-            logger.debug(
-                "User provided a mix of circRNA identifiers that likely map to "
-                + ", ".join(list(set(database_maps)))
-            )
 
         # Check which reference build the coords match to.
         # User may not know if they are 0-based, 1-based or a mix of both. (CIRI + other tool for e.g)
@@ -305,23 +271,23 @@ def ingest_circrna(file_in):
                 for row in valid_rows:
                     # key = orig, value = corrected
                     for key, values in replacements.items():
-                        if row[id_name] == key:
-                            row[id_name] = values
+                        if row[identifier_colname] == key:
+                            row[identifier_colname] = values
 
         # Basic info about inputs
         logger.info(
             str(len(valid_rows))
             + " circRNAs match the pycircdb database"
             )
-        
-        logger.info(
-            str(len(invalid_rows))
-            + " circRNA records were not found in the pycircdb database"
-            )
+        if len(invalid_rows) > 0:
+            logger.info(
+                str(len(invalid_rows))
+                + " circRNA records were not found in the pycircdb database"
+                )
 
         # Write sep files for the user. Should toggle this on/off via param
-        valid_out = Path(config.output_dir + "/corrected_circrna" + ext)
-        invalid_out = Path(config.output_dir + "/invalid_circrna" + ext)
+        valid_out = Path(config.outdir + "/corrected_circrna" + ext)
+        invalid_out = Path(config.outdir + "/invalid_circrna" + ext)
 
         if len(invalid_rows) > 0:
             with invalid_out.open(mode="w", newline="") as out_handle:
@@ -379,86 +345,55 @@ def ingest_circrna(file_in):
         return res
 
 def ingest_others(file_in, workers, type):
+
+    file_path = Path(file_in)
+    _, ext = os.path.splitext(file_path)
+
+    with file_path.open(newline="") as in_handle:
     
-    # Stage as file and check its extension
-    file_in = Path(file_in)
-    _, ext = os.path.splitext(file_in)
-    assert ext in ['.csv', '.txt', '.tsv'], logger.error(f"Input {type} file '{file}' is not a valid text file. Please provide a valid text file with extension '.csv', '.txt', or '.tsv'.")
+        file_dialect = sniff_format(in_handle)
+        file_reader = csv.DictReader(in_handle, dialect=file_dialect)
+        file_delimiter = file_dialect.delimiter
+        file_header = list(file_reader.fieldnames)
 
-    # Open file handle - all file reading operations go below. 
-    with file_in.open(newline="") as in_handle:
-    
-        # Stage lines to dict
-        dialect = sniff_format(in_handle)
-        reader = csv.DictReader(in_handle, dialect=dialect)
+        identifier_colname = file_reader.fieldnames[0]
 
-        # store for writing corrected files 
-        delim = dialect.delimiter
-        header = list(reader.fieldnames)
+        file_rows = []
+        input_identifiers = []
 
-        # hardcode for acces i.e miRNA column name 
-        id_name = reader.fieldnames[0]
+        for row in file_reader:
 
-        # Store valid and invalid rows, write if user wants
-        rows = []
-        ids = []
+            file_rows.append(row)
+            input_identifiers.append(row[identifier_colname])
 
-        # Iterate over dict (rows)
-        for row in reader:
-
-            rows.append(row)
-            ids.append(row[id_name])
+        logger.info(f'User provided {len(input_identifiers)} {type} records')
 
         if type == "miRNA":
-            # strip hsa- from strings
-            ids = [re.sub('^hsa-', '', x) for x in ids]
+            input_identifiers = [re.sub('^hsa-', '', identifier) for identifier in input_identifiers]
 
-        # return list of matches
-        if type == "miRNA":
-            id_file = Path("/home/barry/Desktop/pycircdb/test_data/mirna_identifiers.txt")
-        elif type == "mRNA":
-            id_file = Path("/home/barry/Desktop/pycircdb/test_data/mrna_identifiers.txt")
-        elif type == "RBP":
-            id_file = Path("/home/barry/Desktop/pycircdb/test_data/rbp_identifiers.txt")
+        database_file = match_type_to_file(type)
 
-        logger.info(f'User provided {len(ids)} {type} records')
+        matching_identifiers = helpers.check_identifiers(database_file, input_identifiers)
 
-        matching_identifiers = helpers.check_identifiers(id_file, ids)
+        identifiers_in_database = [x for x in input_identifiers if x in matching_identifiers]
+        identifiers_not_in_database = [x for x in input_identifiers if x not in matching_identifiers]
 
-        # find items in list that are in the set
-        in_database = [x for x in ids if x in matching_identifiers]
-        not_in_database = [x for x in ids if x not in matching_identifiers]
-
-
-        if len(in_database) == 0:
-            logger.critical(f"No valid {type} records found in the input file {file_in}'")
+        if len(identifiers_in_database) == 0:
+            logger.critical(f"No valid {type} records found in the input file {file_path}'")
             return {"config": None, "report":None, "sys_exit_code": 1}
 
-        # subset 'rows' list using not_in_database
-        if workers > 1:
-            # Split the data into chunks
-            chunk_size = len(rows) // mp.cpu_count()
-            chunks = [rows[i:i + chunk_size] for i in range(0, len(rows), chunk_size)]
+        logger.info(f'{len(identifiers_in_database)} {type}s match the pycircdb database')
 
-            with mp.Pool(processes=workers) as pool:
-                results = pool.starmap(process_chunk, [(chunk, not_in_database) for chunk in chunks])
+        invalid_input_rows = return_invalid_input_rows(file_rows, identifiers_not_in_database, workers)
 
-            bad_entries = [item for sublist in results for item in sublist]
-        
-        else:
-            #justify using a regex search here. the ID is either in the database or it isnt?!
-            bad_entries = [d for d in rows if any(re.search(f'{item}$', v) for item in not_in_database for v in d.values())]
- 
-
-        logger.info(f'{len(in_database)} {type}s match the pycircdb database')
-        invalid_file = Path(config.output_dir + f'/invalid_{type}_records' + ext)
-        if len(bad_entries) > 0:
-            logger.info(f"{len(bad_entries)} {type}s were not found in the pycircdb database")
-            logger.info(f"Writing invalid {type} records to {invalid_file}")
-            with invalid_file.open("w", newline="") as out_handle:
-                writer = csv.DictWriter(out_handle, fieldnames=header, delimiter=delim)
+        report_invalid_input_rows = Path(config.outdir + f'/invalid_{type}_records' + ext)
+        if len(invalid_input_rows) > 0:
+            logger.info(f"{len(invalid_input_rows)} {type}s were not found in the pycircdb database")
+            logger.info(f"Writing invalid {type} records to {report_invalid_input_rows}")
+            with report_invalid_input_rows.open("w", newline="") as out_handle:
+                writer = csv.DictWriter(out_handle, fieldnames=file_header, delimiter=file_delimiter)
                 writer.writeheader()
-                for row in bad_entries:
+                for row in invalid_input_rows:
                     writer.writerow(row)
 
         return matching_identifiers
@@ -470,6 +405,30 @@ databases = [
     "circAtlas",
     "no database (coordinates)",
 ]
+
+def match_type_to_file(type):
+    if type == "miRNA":
+        file = Path("/home/barry/Desktop/pycircdb/test_data/mirna_identifiers.txt")
+    elif type == "gene":
+        file = Path("/home/barry/Desktop/pycircdb/test_data/mrna_identifiers.txt")
+    elif type == "RBP":
+        file = Path("/home/barry/Desktop/pycircdb/test_data/rbp_identifiers.txt")
+
+    return file
+
+def return_invalid_input_rows(file_rows, identifiers_not_in_database, workers):
+        if workers > 1:
+            chunk_size = len(file_rows) // mp.cpu_count()
+            chunks = [file_rows[i:i + chunk_size] for i in range(0, len(file_rows), chunk_size)]
+            with mp.Pool(processes=workers) as pool:
+                results = pool.starmap(process_chunk, [(chunk, identifiers_not_in_database) for chunk in chunks])
+
+            bad_entries = [item for sublist in results for item in sublist]
+
+        else:
+            bad_entries = [d for d in file_rows if any(re.search(f'{item}$', v) for item in identifiers_not_in_database for v in d.values())]
+
+        return bad_entries
 
 def process_chunk(chunk, list):
     return [d for d in chunk if any(item in v for item in list for v in d.values())]

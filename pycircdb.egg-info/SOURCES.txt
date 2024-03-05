@@ -1,5 +1,4 @@
 README.md
-hello.py
 setup.py
 pycircdb.egg-info/PKG-INFO
 pycircdb.egg-info/SOURCES.txt

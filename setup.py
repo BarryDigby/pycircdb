@@ -10,8 +10,7 @@ setup(
         'pandas',
         'dask',
         'dask[distributed]',
-        'networkx',
-        'pyveplot'
+        'networkx'
     ],
     entry_points={
         "console_scripts": [

@@ -4,5 +4,4 @@ dask[distributed]
 networkx
 pandas
 pyarrow
-pyveplot
 rich_click

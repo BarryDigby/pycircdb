@@ -1,10 +1,45 @@
 ## Defaults file, mainly for assessing parameter inputs are okay
 ## Do not edit
 
-workers: 1
-circrna_algorithm:
-  - "circexplorer2"
-  - "circrna_finder"
-  - "find_circ"
-  - "ciri"
+circrna_file: null
+mirna_file: null
+gene_file: null
+rbp_file: null
 
+annotate_circrnas: false
+mirna_targets: false
+rna_binding_proteins: false
+cerna_network: false
+
+circrna_algorithm:
+  - 'circexplorer2'
+  - 'circrna_finder'
+  - 'find_circ'
+  - 'ciri'
+circrna_set_logic: null
+mirna_algorithm:
+  - 'miRanda'
+  - 'TargetScan'
+mirna_set_logic: null
+mirna_type:
+  - '6mer'
+  - '7mer-1a'
+  - '7mer-m8'
+  - '8mer-1a'
+mirna_mfe: null
+mirna_score: null
+gene_database:
+  - 'DIANA'
+  - 'ElMMo'
+  - 'MicroCosm'
+  - 'PITA'
+  - 'PicTar'
+  - 'TarBase'
+  - 'TargetScan'
+  - 'miRDB'
+  - 'miRTarBase'
+  - 'miRanda'
+  - 'miRecords'
+
+outdir: 'pycircdb'
+workers: 2

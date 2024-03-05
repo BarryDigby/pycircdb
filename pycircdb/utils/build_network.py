@@ -20,17 +20,35 @@ logger = logging.getLogger(__name__)
 def tester(circrna=None, mirna=None):
 
 
-    # build simple network - circRNA as input
-    # testing dask here...
-    circrna_mirna(circrna, mirna)
-    
+    circrna_mirna(circrna)
 
 
-def circrna_mirna(circrna, mirna):
+def filter_matching_circrnas(dask_df, circrna_ids):
+    """
+    Filter the circrna ids from the dask dataframe
+    """
+    dask_df = dask_df[dask_df['hg38'].isin(circrna_ids)]
+    return dask_df
+
+
+
+def circrna_mirna(circrna):
 
     client = Client(n_workers=4, threads_per_worker=1)
 
-    client.close()
+    try:
+        ddf = dd.read_parquet("test_data/mirna_chrs/*.parquet", engine="pyarrow", columns=['hg38', 'miRNA'])
+
+        ddf = ddf.map_partitions(filter_matching_circrnas, list(circrna.keys())).compute()
+        print(len(ddf))
+
+        ddf.to_csv("results/filtered_mirna.csv", index=False)
+
+
+        client.close()
+    
+    except:
+        client.close()
 
 
 
