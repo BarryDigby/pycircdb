@@ -1,4 +1,3 @@
-results/filtered_mirna.csv
 test_data/mirna_chrs/chr2.parquet
 test_data/mirna_chrs/chr16.parquet
 test_data/mirna_chrs/chr22.parquet

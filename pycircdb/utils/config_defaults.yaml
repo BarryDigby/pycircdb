@@ -40,6 +40,7 @@ gene_database:
   - 'miRTarBase'
   - 'miRanda'
   - 'miRecords'
+gene_set_logic: null
 
 outdir: 'pycircdb'
 workers: 2

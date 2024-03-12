@@ -71,8 +71,11 @@ def ingest_circrna(file_in):
         valid_rows = []
         invalid_rows = []
         coordinates = []
+        nrow = 0
 
         for row in file_reader:
+
+            nrow += 1
 
             if row[identifier_colname].startswith("ASCRP"):
                 valid_rows.append(row)
@@ -92,6 +95,8 @@ def ingest_circrna(file_in):
                 database_maps["no database (coordinates)"].append(row[identifier_colname])
             else:
                 invalid_rows.append(row)
+
+        logger.info(f'User provided {nrow} circRNA records')
 
         # Check which reference build the coords match to.
         # User may not know if they are 0-based, 1-based or a mix of both. (CIRI + other tool for e.g)

@@ -8,18 +8,28 @@ from distributed import Client
 from pathlib import Path
 
 """
-    go back to circrna ingest and make a key value pair hg38 > original input?
-    or do you just go forward with hg38 , any need to preserve the original probe ID? 
-    yes there is actually if they want to keep ASC etc.. 
+Inputs:
+    circrna:
+        {'hg38 identifier': 'original user input'}
+    
+    mirna/mrna/rbp:
+        ['miRNA', 'miRNA',...]
 """
 
 # Initialise the logger
 logger = logging.getLogger(__name__)
 
+def initialise_network(circrna=None, mirna=None, gene=None, rbp=None, workers=None):
 
-def tester(circrna=None, mirna=None):
-
-
+    # We need to assess what inputs the user has provided
+    # Direction of network building dictated by this.
+    # if circrna is not None, set boolean flag to True
+    # if mirna is not None, set boolean flag to True
+    circrna_flag = True if circrna is not None else False
+    mirna_flag = True if mirna is not None else False
+    gene_flag = True if gene is not None else False
+    rbp_flag = True if rbp is not None else False
+    
     circrna_mirna(circrna)
 
 
@@ -54,4 +64,4 @@ def circrna_mirna(circrna):
 
 
 if __name__ == "__main__":
-    tester()
+    initialise_network()

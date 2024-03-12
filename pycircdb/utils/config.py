@@ -51,6 +51,7 @@ mirna_type: List[str] = []
 mirna_mfe: float
 mirna_score: float 
 gene_database: List[str] = []
+gene_set_logic: str
 outdir = os.path.realpath(os.getcwd())
 workers: int
 verbose: int
