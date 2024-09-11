@@ -41,11 +41,11 @@ def stage_inputs(circrna_file=None, mirna_file=None, gene_file=None, rbp_file=No
         mirna_list = ingest_others(mirna_file, workers, "miRNA")
 
     if gene_file is not None:
-        logger.info('Ingesting genes...')
+        logger.info('Ingesting gene file...')
         gene_list = ingest_others(gene_file, workers, "gene")
 
     if rbp_file is not None:
-        logger.info('Ingesting RBPs...')
+        logger.info('Ingesting RBP file...')
         rbp_list = ingest_others(rbp_file, workers, "RBP")
 
     return circrna_dict, mirna_list, gene_list, rbp_list
@@ -433,6 +433,7 @@ def return_invalid_input_rows(file_rows, identifiers_not_in_database, workers):
         else:
             bad_entries = [d for d in file_rows if any(re.search(f'{item}$', v) for item in identifiers_not_in_database for v in d.values())]
 
+
         return bad_entries
 
 def process_chunk(chunk, list):
@@ -468,18 +469,23 @@ def sniff_format(handle):
     """
     Detect the tabular format.
     Does not work with single column file
-    work around: https://bugs.python.org/issue2078:
+    work around: https://bugs.python.org/issue2078: Date: 2008-03-27 16:07
     """
     peek = read_head(handle)
     handle.seek(0)
     sniffer = csv.Sniffer()
-    if not sniffer.has_header(peek):
-        logger.critical(f"The input file does not have a header")
-        sys.exit(1)
-    dialect = sniffer.sniff(peek)
-    if dialect.delimiter not in [",", "\t"]:
-        logger.debug(f"Single column file provided by user. Default to tab delimiter")
-        dialect.delimiter = "\t"
+    try:
+        dialect = sniffer.sniff(peek)
+    except csv.Error:
+        dialect = csv.excel
+
+    #if not sniffer.has_header(peek):
+    #    logger.critical(f"The input file does not have a header")
+    #    sys.exit(1)
+    #dialect = sniffer.sniff(peek)
+    #if dialect.delimiter not in [",", "\t"]:
+    #    logger.debug(f"Single column file provided by user. Default to tab delimiter")
+    #    dialect.delimiter = "\t"
 
     return dialect
 

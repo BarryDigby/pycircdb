@@ -360,14 +360,18 @@ def run(
     # miRNA filtering.
     if mirna_list is not None:
         filtered_mirnas = filter_mirna(mirna_list, config.mirna_algorithm, config.mirna_set_logic, config.mirna_type, config.mirna_mfe, config.mirna_score, config.workers)
+    else:
+        filtered_mirnas = None
 
     # gene filtering
     # basic triggers for gene filtering
     if gene_list is not None:
         filtered_genes = filter_gene(gene_list, config.gene_database, config.gene_set_logic, config.workers)
+    else:
+        filtered_genes = None
 
     # Build network files
-    #foo = initialise_network(filtered_circrnas, mirna_list, gene_list, rbp_list, config.workers)
+    foo = initialise_network(filtered_circrnas, filtered_mirnas, filtered_genes, rbp_list, config.workers)
         
     # dont delete me
     sys_exit_code = 0

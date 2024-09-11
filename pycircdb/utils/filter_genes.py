@@ -21,11 +21,11 @@ def filter_gene(gene_list,
                 workers=None):
 
     # sanity checks
-    print("printing gene databases") 
-    print(databases)
-    print("printing set_logic")
-    print(set_logic)
-
+    #print("printing gene databases") 
+    #print(databases)
+    #print("printing set_logic")
+    #print(set_logic)
+#
     client = Client(n_workers=workers, threads_per_worker=1)
 
     gene_filtering_variables = [databases]

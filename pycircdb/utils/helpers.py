@@ -147,7 +147,7 @@ def check_identifiers(
         ) -> list:
         """
         miRNA, RBP and HGNC symbols are in a one column txt file. 
-        Checking if the users inputs match the databses can be done
+        Checking if the users inputs match the databases can be done
         using these smaller text files. 
         """
 

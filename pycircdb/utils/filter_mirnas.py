@@ -25,16 +25,16 @@ def filter_mirna(mirna_list,
                 workers=None):
 
     # sanity checks
-    print("printing algorithms") 
-    print(algorithms)
-    print("printing set_logic")
-    print(set_logic)
-    print("printing type")
-    print(type)
-    print("printing mfe")
-    print(mfe)
-    print("printing score")
-    print(score)
+    #print("printing algorithms") 
+    #print(algorithms)
+    #print("printing set_logic")
+    #print(set_logic)
+    #print("printing type")
+    #print(type)
+    #print("printing mfe")
+    #print(mfe)
+    #print("printing score")
+    #print(score)
 
     mirna_filtering_variables = [algorithms, type, mfe, score]
     if any(var is not None for var in mirna_filtering_variables):
@@ -72,7 +72,7 @@ def filter_mirna(mirna_list,
             ddf.to_csv("results/filtered_mirna.txt", sep="\t", index=False)
             client.close()
             return ddf
-        except:
+        except Exception as e:
             client.close()
             return None
     
