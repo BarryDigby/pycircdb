@@ -1,7 +1,0 @@
-click
-dask
-dask[distributed]
-networkx
-pandas
-pyarrow
-rich_click

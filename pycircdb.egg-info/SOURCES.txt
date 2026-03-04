@@ -1,8 +1,0 @@
-README.md
-setup.py
-pycircdb.egg-info/PKG-INFO
-pycircdb.egg-info/SOURCES.txt
-pycircdb.egg-info/dependency_links.txt
-pycircdb.egg-info/entry_points.txt
-pycircdb.egg-info/requires.txt
-pycircdb.egg-info/top_level.txt
