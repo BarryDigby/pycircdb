@@ -1,0 +1,31 @@
+# config_defaults.yaml - Your defaults file
+# Input files
+circrna_file: null
+mirna_file: null  
+gene_file: null
+rbp_file: null
+
+# Module flags
+annotate_circrnas: false
+mirna_targets: false
+rna_binding_proteins: false  
+cerna_network: false
+
+# Algorithm choices (as lists of valid options)
+circrna_algorithm: ['circexplorer2', 'circrna_finder', 'find_circ', 'ciri']
+mirna_algorithm: ['miRanda', 'TargetScan']
+mirna_type: ['6mer', '7mer-1a', '7mer-m8', '8mer-1a']
+gene_database: ['DIANA', 'ElMMo', 'MicroCosm', 'PITA', 'PicTar', 'TarBase', 'TargetScan', 'miRDB', 'miRTarBase', 'miRanda', 'miRecords']
+
+# Logic operators  
+circrna_set_logic: null
+mirna_set_logic: null
+gene_set_logic: null
+
+# Thresholds
+mirna_mfe: null        # Range: -62.0 to -0.41
+mirna_score: null      # Range: 140.0 to 220.0
+
+# Runtime options
+outdir: 'pycircdb'
+workers: 2

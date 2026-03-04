@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pycircdb"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "click>=8.3.1",
+    "polars>=1.38.1",
+    "pyyaml>=6.0",
+    "rich>=14.3.2",
+    "rich-click>=1.9.7",
+]
+
+[project.scripts]
+pycircdb = "pycircdb.__main__:run_pycircdb"
+
+[tool.setuptools]
+packages = ["pycircdb"]
