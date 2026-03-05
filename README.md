@@ -1,200 +1,155 @@
-Co# 🎉 Enhanced TensorFlow DNN Regression Workflow - Complete Implementation
+# pycircdb
 
-## What You Now Have
+A command-line tool for circular RNA (circRNA) database analysis and network construction.
 
-I've created a **comprehensive TensorFlow Deep Neural Network workflow** with **uncertainty quantification** that addresses your specific requirements:
+## Overview
 
-### ✅ Your Original Requirements Met:
-- ✅ **3k dataset split**: 2,700 for training/testing, 300 for predictions
-- ✅ **DNN regression model** with hyperparameter tuning  
-- ✅ **Cross-validation** for robust model evaluation
-- ✅ **Train/test split** with proper validation
-- ✅ **Predictions for missing targets**
+`pycircdb` enables researchers to query and analyse circRNA interactions, building biological networks from user-supplied lists of circRNAs, miRNAs, genes, and RNA-binding proteins (RBPs).
 
-### 🆕 **BONUS: Confidence Intervals Added!**
-- ✅ **Monte Carlo Dropout** - Fast uncertainty estimation
-- ✅ **Quantile Regression** - Direct interval prediction 
-- ✅ **Bootstrap Ensemble** - Most robust method
-- ✅ **Coverage analysis** - Validates prediction reliability
-- ✅ **Uncertainty visualization** - Comprehensive plots
+## Features
 
-## 📁 Files Created
+- **circRNA annotation** — annotate circRNAs with genomic information
+- **miRNA target analysis** — build circRNA–miRNA interaction networks
+- **RNA-binding protein analysis** — build circRNA–RBP interaction networks
+- **ceRNA network construction** — build competitive endogenous RNA (circRNA–miRNA–mRNA) networks
 
-### Core Implementation Files
-1. **`dnn_regression_workflow.py`** - Complete advanced workflow with uncertainty
-2. **`simple_dnn_example.py`** - Basic workflow (your original request)
-3. **`simple_uncertainty_example.py`** - Focused uncertainty demonstration
+## Installation
 
-### Documentation & Setup
-4. **`DNN_REGRESSION_GUIDE.md`** - Comprehensive methodology guide
-5. **`UNCERTAINTY_GUIDE.md`** - Deep dive into uncertainty methods
-6. **`requirements_dnn.txt`** - All package dependencies
-7. **`setup_dnn_workflow.sh`** - Automated setup script
-
-## 🚀 Quick Start - Three Usage Options
-
-### Option 1: Full Advanced Workflow (Recommended)
 ```bash
-python dnn_regression_workflow.py
+pip install pycircdb
 ```
-**Features:** Complete workflow with uncertainty quantification, hyperparameter tuning, and visualization
 
-### Option 2: Simple Basic Workflow 
+## Quick Start
+
 ```bash
-python simple_dnn_example.py
-```
-**Features:** Streamlined implementation focusing on core concepts
+# Annotate circRNAs
+pycircdb --circrna circrnas.txt --annotate-circrnas --outdir results/
 
-### Option 3: Uncertainty Method Comparison
+# circRNA–miRNA interaction analysis
+pycircdb --circrna circrnas.txt --mirna mirnas.txt --mirna-targets --outdir results/
+
+# RNA-binding protein analysis
+pycircdb --circrna circrnas.txt --rbp rbps.txt --rna-binding-proteins --outdir results/
+
+# Full ceRNA network
+pycircdb --circrna circrnas.txt --mirna mirnas.txt --gene genes.txt --cerna-network --outdir results/
+
+# Using a configuration file
+pycircdb --config my_analysis.yaml
+```
+
+## Input Files
+
+| Option | Description |
+|---|---|
+| `--circrna` | Path to a file containing circRNA identifiers (one per line) |
+| `--mirna` | Path to a file containing miRNA identifiers (one per line) |
+| `--gene` | Path to a file containing gene identifiers (one per line) |
+| `--rbp` | Path to a file containing RBP identifiers (one per line) |
+
+## Analysis Modules
+
+| Option | Description | Required Input |
+|---|---|---|
+| `--annotate-circrnas` | Annotate circRNAs with genomic information | `--circrna` |
+| `--mirna-targets` | Build circRNA–miRNA interaction network | `--circrna` or `--mirna` |
+| `--rna-binding-proteins` | Build circRNA–RBP interaction network | `--circrna` or `--rbp` |
+| `--cerna-network` | Build ceRNA network | At least one of `--circrna`, `--mirna`, `--gene` |
+
+## Algorithm Filtering
+
+### circRNA Detection Algorithms
 ```bash
-python simple_uncertainty_example.py
-```
-**Features:** Side-by-side comparison of uncertainty methods
-
-## 🎯 Key Innovations Added
-
-### 1. **Multiple Uncertainty Methods**
-```python
-# Choose your uncertainty method
-workflow = DNNRegressionWorkflow(uncertainty_method='mc_dropout')  # Fast
-workflow = DNNRegressionWorkflow(uncertainty_method='quantile')    # Direct
-workflow = DNNRegressionWorkflow(uncertainty_method='ensemble')    # Robust
+# Filter circRNAs detected by specific algorithms
+--circrna-algorithm ciri,circexplorer2
+--circrna-set-logic AND   # circRNA must be detected by all algorithms (default)
+--circrna-set-logic OR    # circRNA detected by any algorithm
 ```
 
-### 2. **Comprehensive Prediction Output**
-```python
-# Get predictions with confidence intervals
-predictions, lower_95, upper_95 = workflow.predict_with_uncertainty(X_test)
+Valid options: `circexplorer2`, `circrna_finder`, `find_circ`, `ciri`
 
-# Saved output includes:
-# - predicted_target: Mean prediction
-# - prediction_lower_95: Lower confidence bound  
-# - prediction_upper_95: Upper confidence bound
-# - prediction_interval_width: Uncertainty measure
-```
-
-### 3. **Enhanced Evaluation Metrics**
-- **Coverage Probability**: % of true values within confidence intervals
-- **Mean Interval Width**: Average uncertainty measure
-- **R² Score**: Prediction accuracy
-- **RMSE/MAE**: Standard regression metrics
-
-## 🔧 Adapting to Your Data
-
-### Replace Simulated Data Loading
-```python
-# In load_and_prepare_data method, replace simulation with:
-def load_and_prepare_data(self, data_path: str = "your_data.csv"):
-    # Load your actual data
-    data = pd.read_csv(data_path)
-    
-    # Separate complete vs missing target cases
-    complete_data = data.dropna(subset=['your_target_column'])
-    missing_target_data = data[data['your_target_column'].isna()].drop('your_target_column', axis=1)
-    
-    return complete_data, missing_target_data
-```
-
-### Customize Model Architecture
-```python
-# Modify create_dnn_model method for your specific needs:
-- Adjust layer sizes based on your feature count
-- Add/remove layers based on problem complexity  
-- Tune dropout rates for your dataset size
-```
-
-## 📊 Expected Outputs
-
-### 1. **Model Performance Summary**
-```
-✅ Model Performance Summary:
-   - Cross-validation R²: 0.8924 (± 0.0156)
-   - Test R²: 0.8876
-   - Test RMSE: 0.8234
-   - Test MAE: 0.6124
-
-🔮 Uncertainty Quantification (mc_dropout):
-   - Test set 95% coverage: 94.2%
-   - Mean prediction interval width: 1.6542
-```
-
-### 2. **Missing Target Predictions with Uncertainty**
-```csv
-feature_0,feature_1,...,predicted_target,prediction_lower_95,prediction_upper_95,prediction_interval_width
--1.2345,0.6789,...,2.1456,-0.3421,4.6333,4.9754
-0.9876,-0.4321,...,1.8923,0.1245,3.6601,3.5356
-...
-```
-
-### 3. **Visual Analysis**
-- **Prediction vs Actual** with confidence intervals
-- **Residual Analysis** for model validation
-- **Coverage Plots** showing uncertainty calibration  
-- **Cross-validation** performance consistency
-
-## 🎯 Advanced Use Cases
-
-### Business Decision Making
-```python
-# Flag high-uncertainty predictions for human review
-uncertainty_threshold = 2.0
-high_uncertainty = (upper_bounds - lower_bounds) > uncertainty_threshold
-
-print(f"Predictions requiring review: {high_uncertainty.sum()}")
-print(f"Auto-actionable predictions: {(~high_uncertainty).sum()}")
-```
-
-### Model Confidence Assessment
-```python
-# Assess model reliability across different input regions
-coverage_by_quartile = []
-for q in [0.25, 0.50, 0.75, 1.0]:
-    quartile_mask = predictions <= np.quantile(predictions, q)
-    coverage = np.mean((y_true[quartile_mask] >= lower[quartile_mask]) & 
-                      (y_true[quartile_mask] <= upper[quartile_mask]))
-    coverage_by_quartile.append(coverage)
-```
-
-## 🚀 Next Steps
-
-### 1. **Run the Setup**
+### miRNA Prediction Algorithms
 ```bash
-chmod +x setup_dnn_workflow.sh
-./setup_dnn_workflow.sh
+# Filter miRNA interactions by prediction algorithm
+--mirna-algorithm miRanda,TargetScan
+--mirna-set-logic AND           # default
+--mirna-type 7mer-m8,8mer-1a   # TargetScan MRE site types
+--mirna-mfe -25.0               # miRanda minimum free energy threshold (-62.0 to -0.41)
+--mirna-score 150.0             # miRanda interaction score threshold (140.0 to 220.0)
 ```
 
-### 2. **Test with Your Data**
-- Replace the simulated data with your actual dataset
-- Adjust feature preprocessing as needed
-- Tune hyperparameters for your specific problem
+Valid algorithms: `miRanda`, `TargetScan`
+Valid MRE types: `6mer`, `7mer-m8`, `7mer-1a`, `8mer-1a`
 
-### 3. **Production Deployment**
+### Gene/miRNA–mRNA Databases
+```bash
+--gene-database miRTarBase,TarBase
+--gene-set-logic AND   # default
+```
+
+Valid databases: `DIANA`, `ElMMo`, `MicroCosm`, `PITA`, `PicTar`, `TarBase`, `TargetScan`, `miRDB`, `miRTarBase`, `miRanda`, `miRecords`
+
+## Configuration File
+
+All options can be specified in a YAML configuration file:
+
+```yaml
+# Input files
+circrna_file: "data/circrnas.txt"
+mirna_file: "data/mirnas.txt"
+gene_file: "data/genes.txt"
+
+# Analysis modules
+annotate_circrnas: true
+mirna_targets: true
+cerna_network: true
+
+# Algorithm filtering
+circrna_algorithm: ["ciri", "circexplorer2"]
+circrna_set_logic: "AND"
+mirna_algorithm: ["miRanda", "TargetScan"]
+mirna_mfe: -30.0
+
+# Runtime settings
+outdir: "results/"
+workers: 8
+verbose: 1
+```
+
+```bash
+pycircdb --config my_analysis.yaml
+```
+
+See [CONFIG_GUIDE.md](CONFIG_GUIDE.md) for full configuration documentation.
+
+## Runtime Options
+
+| Option | Default | Description |
+|---|---|---|
+| `--outdir` | `output/` | Output directory for results |
+| `--workers` | `2` | Number of parallel processes |
+| `--verbose` | `0` | Verbosity level (0 = normal, 1 = verbose, 2 = debug) |
+| `--quiet` | `false` | Suppress output except errors |
+| `--config` | — | Path to YAML configuration file |
+| `--save-config` | — | Save current settings to a YAML file |
+
+## Python API
+
 ```python
-# Save trained model and scalers
-workflow.best_model.save('production_model.h5')
-joblib.dump(workflow.scaler_X, 'scaler_X.pkl')
-joblib.dump(workflow.scaler_y, 'scaler_y.pkl')
+from pycircdb import run
+from pycircdb.config import PycircdbConfig
 
-# Load for production use
-model = keras.models.load_model('production_model.h5')
-scaler_X = joblib.load('scaler_X.pkl')  
-scaler_y = joblib.load('scaler_y.pkl')
+config = PycircdbConfig(
+    circrna_file="data/circrnas.txt",
+    mirna_file="data/mirnas.txt",
+    mirna_targets=True,
+    outdir="results/",
+    workers=4,
+)
+
+run(config)
 ```
 
-## 🌟 Key Benefits Achieved
+## License
 
-### **Beyond Standard Regression:**
-- **Actionable Uncertainty**: Know when to trust predictions
-- **Risk Assessment**: Quantify prediction reliability
-- **Robust Validation**: Multiple cross-validation approaches  
-- **Production Ready**: Complete pipeline with error handling
-
-### **Uncertainty Quantification Value:**
-- **95% Coverage Analysis**: Validates model calibration
-- **Confidence-based Decisions**: Act only on reliable predictions  
-- **Uncertainty Visualization**: Understand model confidence patterns
-- **Method Comparison**: Choose optimal uncertainty approach
-
-This implementation transforms a basic regression task into a **production-ready system** with **quantified reliability measures** - perfect for high-stakes applications where knowing prediction confidence is as important as the prediction itself! 
-
-🎉 **You now have a state-of-the-art DNN regression workflow with uncertainty quantification!**
+See [LICENSE](LICENSE) for details.
