@@ -3,10 +3,6 @@ from typing import Dict, Any, Union, List
 from pathlib import Path
 import os
 import polars as pl
-import gzip
-
-from utils.mirna.mirna_driver import broadcast_mirna
-
 
 RBPBroadcast = Dict[str, Union[str, str, pl.DataFrame, List, None]]
 
@@ -31,7 +27,7 @@ def broadcast_rbp(
         for db_name, pl_hits in lookup_hits.items():
             for chromosome_rbp_path in rbp_tables:
 
-                foo =  {
+                yield {
                     "sample_name": sample_name,
                     "output_dir": config['global_parameters'].get("output_dir"),
                     "db_name": db_name,
@@ -39,8 +35,6 @@ def broadcast_rbp(
                     "rbp_table": chromosome_rbp_path,
                 }
 
-                print(foo)
-                yield foo
 
 
 def rbp_hits(broadcast_rbp: RBPBroadcast) -> None:
@@ -61,8 +55,6 @@ def rbp_hits(broadcast_rbp: RBPBroadcast) -> None:
         )
 
     df = query.collect(streaming=True)
-
-    print(df)
     
     if not df.is_empty():
         p = Path(output_dir)

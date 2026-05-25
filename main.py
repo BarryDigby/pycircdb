@@ -12,11 +12,13 @@ from hamilton.execution import executors
 from utils.connect_s3.download_annotation_tables import fetch_annotation_tables
 from utils.connect_s3.download_sequence_tables import fetch_sequence_tables
 from utils.connect_s3.download_mirna_tables import fetch_mirna_tables
+from utils.connect_s3.download_rbp_tables import fetch_rbp_tables
 
 import utils.detect_inputs.detect_inputs_driver as instantiate_lookup_driver
 import utils.annotate.annotate_driver as annotation_driver
 import utils.fasta.sequence_driver as sequence_driver
 import utils.mirna.mirna_driver as mirna_driver
+import utils.rbp.rbp_driver as rbp_driver
 
 
 @click.group(context_settings=dict(help_option_names=['-h', '--help']))
@@ -127,6 +129,34 @@ def mirna(config: str):
 
     run_mirna(**cfg)
 
+
+@cli.command('rbp')
+@click.option(
+    "-c",
+    "--config",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path to the JSON config file containing workflow parameters."
+)
+@click.option(
+    "--annotate",
+    is_flag=True,
+    help="Also run the annotation workflow before RBP lookup."
+)
+def rbp(config: str, annotate: bool):
+    """Output RBP interactions for identified circRNAs."""
+    cfg = load_config(config)
+
+    if not cfg.get('samples'):
+        raise click.UsageError("Configuration file must contain a 'samples' dictionary.")
+
+    if annotate:
+        lookup_dict = run_annotation(**cfg)
+    else:
+        lookup_dict = None
+
+    run_rbp(lookup_dict=lookup_dict, **cfg)
+
 def run_annotation(**kwargs):
     """Run the annotation workflow."""
     print("Running annotation with configuration:")
@@ -223,6 +253,38 @@ def run_mirna(lookup_dict=None, **kwargs):
     dr.execute(
         ['close_mirna'],
         inputs={'config': kwargs, 'lookup_dict': lookup_dict, 'mirna_tables': mirna_tables}
+    )
+
+
+def run_rbp(lookup_dict=None, **kwargs):
+    """Output RBP interactions for identified circRNAs.
+
+    Args:
+        lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
+        **kwargs: Configuration parameters.
+    """
+    print("Running RBP interaction output with configuration:")
+    print(kwargs)
+
+    if lookup_dict is None:
+        print("Computing lookup tables from scratch...")
+        lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs)
+    else:
+        print("Using lookup tables from previous step...")
+
+    rbp_tables = fetch_rbp_tables()
+
+    dr = (
+        driver.Builder()
+        .enable_dynamic_execution(allow_experimental_mode=True)
+        .with_local_executor(executors.SynchronousLocalTaskExecutor())
+        .with_remote_executor(executors.MultiThreadingExecutor(max_tasks=kwargs.get("cpus", 1)))
+        .with_modules(rbp_driver)
+        .build()
+    )
+    dr.execute(
+        ['close_rbp'],
+        inputs={'config': kwargs, 'lookup_dict': lookup_dict, 'rbp_tables': rbp_tables}
     )
 
 

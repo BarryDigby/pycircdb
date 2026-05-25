@@ -3,7 +3,6 @@ from typing import Dict, Any, Union, List
 from pathlib import Path
 import os
 import polars as pl
-import gzip
 
 
 miRNABroadcast = Dict[str, Union[str, str, pl.DataFrame, List, None]]
@@ -29,16 +28,13 @@ def broadcast_mirna(
         for db_name, pl_hits in lookup_hits.items():
             for chromosome_mirna_path in mirna_tables:
 
-                foo =  {
+                yield {
                     "sample_name": sample_name,
                     "output_dir": config['global_parameters'].get("output_dir"),
                     "db_name": db_name,
                     "lookup_hits": pl_hits,
                     "mirna_table": chromosome_mirna_path,
                 }
-
-                print(foo)
-                yield foo
 
 
 def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
