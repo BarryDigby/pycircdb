@@ -1,0 +1,23 @@
+{
+  "global_parameters": {
+    "cpu": 4,
+    "output_dir": "results/"
+  },
+  "samples": {
+    "vromann": {
+      "input": "test/vromann.txt",
+      "reference": "hg38",
+      "zero_based": true
+    },
+    "glioblastoma_plus_dcc": {
+      "input": "test/rnase_plus/glioblastoma_RNase_plus_dcc.txt",
+      "reference": "hg38",
+      "zero_based": true
+    },
+    "glioblastoma_plus_ciriquant": {
+      "input": "test/rnase_plus/glioblastoma_RNase_plus_ciriquant.txt",
+      "reference": "hg38",
+      "zero_based": true
+    }
+  }
+}
