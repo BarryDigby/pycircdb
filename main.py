@@ -21,10 +21,26 @@ import utils.mirna.mirna_driver as mirna_driver
 import utils.rbp.rbp_driver as rbp_driver
 
 
-@click.group(context_settings=dict(help_option_names=['-h', '--help']))
-def cli():
+@click.group(chain=True, context_settings=dict(help_option_names=['-h', '--help']))
+@click.option(
+    "-c",
+    "--config",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=False,
+    help="Path to the JSON config file containing workflow parameters."
+)
+@click.pass_context
+def cli(ctx, config):
     """Main CLI tool."""
-    pass
+    ctx.ensure_object(dict)
+    if config:
+        cfg = load_config(config)
+        if not cfg.get('samples'):
+            raise click.UsageError("Configuration file must contain a 'samples' dictionary.")
+        ctx.obj['cfg'] = cfg
+    else:
+        ctx.obj['cfg'] = None
+    ctx.obj['lookup_dict'] = None
 
 @cli.command('config')
 @click.option(
@@ -43,118 +59,52 @@ def _init_create_config(name: str):
 
 
 @cli.command('annotate')
-@click.option(
-    "-c",
-    "--config",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    required=True,
-    help="Path to the JSON config file containing workflow parameters."
-)
-@click.option(
-    "--fasta",
-    is_flag=True,
-    help="Also output circRNA sequences in FASTA format."
-)
-@click.option(
-    "--mirna",
-    is_flag=True,
-    help="Also output miRNA interactions in tabular format."
-)
-def annotate(config: str, fasta: bool, mirna: bool):
+@click.pass_context
+def annotate(ctx):
     """Annotate circRNAs using a JSON configuration file."""
-    # 1. Load configuration purely from the provided JSON
-    # TODO: Ensure types are correct. Validate the JSON
-    cfg = load_config(config)
-
-    # 2. Validate essential keys exist
-    if not cfg.get('samples'):
-        raise click.UsageError("Configuration file must contain a 'samples' dictionary.")
+    cfg = ctx.obj.get('cfg')
+    if not cfg:
+        raise click.UsageError("A config file must be provided via -c/--config before subcommands (e.g., main.py -c config.json annotate)")
 
     # 3. Run annotation and get lookup results
     lookup_dict = run_annotation(**cfg)
-
-    # 4. If --fasta flag, output FASTA using the same lookup results
-    if fasta:
-        run_fasta(lookup_dict=lookup_dict, **cfg)
-
-    # 5. If --mirna flag, output miRNA interactions using the same lookup results
-    if mirna:
-        run_mirna(lookup_dict=lookup_dict, **cfg)
+    ctx.obj['lookup_dict'] = lookup_dict
 
 
 @cli.command('fasta')
-@click.option(
-    "-c",
-    "--config",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    required=True,
-    help="Path to the JSON config file containing workflow parameters."
-)
-@click.option(
-    "--mirna",
-    is_flag=True,
-    help="Also output miRNA interactions in tabular format."
-)
-def fasta(config: str, mirna: bool):
+@click.pass_context
+def fasta(ctx):
     """Output circRNA sequences in FASTA format."""
-    # 1. Load configuration purely from the provided JSON
-    cfg = load_config(config)
+    cfg = ctx.obj.get('cfg')
+    if not cfg:
+        raise click.UsageError("A config file must be provided via -c/--config")
 
-    # 2. Validate essential keys exist
-    if not cfg.get('samples'):
-        raise click.UsageError("Configuration file must contain a 'samples' dictionary.")
-
-    # 3. Run fasta output, capture lookup_dict for optional mirna step
-    lookup_dict = run_fasta(**cfg)
-
-    # 4. If --mirna flag, reuse the lookup results
-    if mirna:
-        run_mirna(lookup_dict=lookup_dict, **cfg)
+    lookup_dict = ctx.obj.get('lookup_dict')
+    lookup_dict = run_fasta(lookup_dict=lookup_dict, **cfg)
+    ctx.obj['lookup_dict'] = lookup_dict
 
 
 @cli.command('mirna')
-@click.option(
-    "-c",
-    "--config",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    required=True,
-    help="Path to the JSON config file containing workflow parameters."
-)
-def mirna(config: str):
+@click.pass_context
+def mirna(ctx):
     """Output miRNA interactions for identified circRNAs."""
-    cfg = load_config(config)
+    cfg = ctx.obj.get('cfg')
+    if not cfg:
+        raise click.UsageError("A config file must be provided via -c/--config")
 
-    if not cfg.get('samples'):
-        raise click.UsageError("Configuration file must contain a 'samples' dictionary.")
-
-    run_mirna(**cfg)
+    lookup_dict = ctx.obj.get('lookup_dict')
+    run_mirna(lookup_dict=lookup_dict, **cfg)
 
 
 @cli.command('rbp')
-@click.option(
-    "-c",
-    "--config",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    required=True,
-    help="Path to the JSON config file containing workflow parameters."
-)
-@click.option(
-    "--annotate",
-    is_flag=True,
-    help="Also run the annotation workflow before RBP lookup."
-)
-def rbp(config: str, annotate: bool):
+@click.pass_context
+def rbp(ctx):
     """Output RBP interactions for identified circRNAs."""
-    cfg = load_config(config)
+    cfg = ctx.obj.get('cfg')
+    if not cfg:
+        raise click.UsageError("A config file must be provided via -c/--config")
 
-    if not cfg.get('samples'):
-        raise click.UsageError("Configuration file must contain a 'samples' dictionary.")
-
-    if annotate:
-        lookup_dict = run_annotation(**cfg)
-    else:
-        lookup_dict = None
-
+    lookup_dict = ctx.obj.get('lookup_dict')
     run_rbp(lookup_dict=lookup_dict, **cfg)
 
 def run_annotation(**kwargs):
@@ -167,8 +117,10 @@ def run_annotation(**kwargs):
     # Lookup tables
     lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs)
 
+    tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
+
     # Pull annotation tables
-    annotation_tables = fetch_annotation_tables(lookup_dict)
+    annotation_tables = fetch_annotation_tables(lookup_dict, tmp_dir_path=tmp_dir)
 
     # Annotate + write to file in parallel
     dr = (
@@ -205,7 +157,8 @@ def run_fasta(lookup_dict=None, **kwargs):
     else:
         print("Using lookup tables from previous step...")
     
-    sequence_tables = fetch_sequence_tables(lookup_dict)
+    tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
+    sequence_tables = fetch_sequence_tables(lookup_dict, tmp_dir_path=tmp_dir)
 
     dr = (
         driver.Builder()
@@ -240,7 +193,8 @@ def run_mirna(lookup_dict=None, **kwargs):
     else:
         print("Using lookup tables from previous step...")
 
-    mirna_tables = fetch_mirna_tables()
+    tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
+    mirna_tables = fetch_mirna_tables(tmp_dir_path=tmp_dir)
 
     dr = (
         driver.Builder()
@@ -272,7 +226,8 @@ def run_rbp(lookup_dict=None, **kwargs):
     else:
         print("Using lookup tables from previous step...")
 
-    rbp_tables = fetch_rbp_tables()
+    tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
+    rbp_tables = fetch_rbp_tables(tmp_dir_path=tmp_dir)
 
     dr = (
         driver.Builder()

@@ -55,8 +55,6 @@ def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
         )
 
     df = query.collect(streaming=True)
-
-    print(df)
     
     if not df.is_empty():
         p = Path(output_dir)

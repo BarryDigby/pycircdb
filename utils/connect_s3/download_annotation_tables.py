@@ -84,7 +84,7 @@ def _download_required_files(
     return annotation_dict
 
 
-def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]]):
+def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp"):
     """
     Check if we need all CSCD annotations, or just a subset based on the lookup results.
     """
@@ -101,7 +101,7 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]]):
     required_files = other_files + cscd_files
 
     annotation_sums = os.path.join(os.getcwd(), "assets", "annotation_md5sum.csv")
-    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    tmp_dir = os.path.join(os.getcwd(), tmp_dir_path)
     valid_paths = check_sums(
         tmp_dir=tmp_dir,
         md5sum_file=annotation_sums,
@@ -119,7 +119,7 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]]):
 
     bucket = 'digbyb'
     
-    cwd_tmp = os.path.join(os.getcwd(), "tmp")
+    cwd_tmp = os.path.join(os.getcwd(), tmp_dir_path)
     os.makedirs(cwd_tmp, exist_ok=True)
     local_dir = tempfile.mkdtemp(prefix="annotation_tables_", dir=cwd_tmp)
     annotation_dict = _download_required_files(

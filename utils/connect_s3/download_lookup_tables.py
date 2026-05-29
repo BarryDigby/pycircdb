@@ -7,7 +7,7 @@ from botocore.config import Config
 from utils.md5sum_check import check_sums
 
 
-def fetch_lookup_tables() -> Dict[str, str]:
+def fetch_lookup_tables(tmp_dir_path: str = "tmp") -> Dict[str, str]:
     """
     80MB storage used locally.
     """
@@ -23,7 +23,7 @@ def fetch_lookup_tables() -> Dict[str, str]:
     
     # Check whether cached files in tmp/ already match the expected checksums.
     lookup_sums = os.path.join(os.getcwd(), "assets", "lookup_md5sum.csv")
-    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    tmp_dir = os.path.join(os.getcwd(), tmp_dir_path)
     valid_paths = check_sums(tmp_dir=tmp_dir, md5sum_file=lookup_sums, dir_prefix="lookup_tables_", required_files=known_files)
     if valid_paths:
         lookup_dict = {
@@ -41,8 +41,8 @@ def fetch_lookup_tables() -> Dict[str, str]:
     
     bucket = 'digbyb'
     
-    # Create a temporary directory in the current working directory to store downloaded files
-    cwd_tmp = os.path.join(os.getcwd(), "tmp")
+    # Create a temporary directory to store downloaded files
+    cwd_tmp = os.path.join(os.getcwd(), tmp_dir_path)
     os.makedirs(cwd_tmp, exist_ok=True)
     local_dir = tempfile.mkdtemp(prefix="lookup_tables_", dir=cwd_tmp)
     lookup_dict = {}

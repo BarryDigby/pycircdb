@@ -1,7 +1,8 @@
 {
   "global_parameters": {
     "cpu": 4,
-    "output_dir": "results/"
+    "output_dir": "results/",
+    "tmp_dir": "tmp/"
   },
   "samples": {
     "vromann": {

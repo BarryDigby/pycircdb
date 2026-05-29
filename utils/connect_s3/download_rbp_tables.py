@@ -7,7 +7,7 @@ from typing import List
 from utils.md5sum_check import check_sums
 
 
-def fetch_rbp_tables() -> List[str]:
+def fetch_rbp_tables(tmp_dir_path: str = "tmp") -> List[str]:
     """
     Download (or return cached) RBP chromosome parquet files.
     """
@@ -18,9 +18,9 @@ def fetch_rbp_tables() -> List[str]:
 
     # Check whether cached files in tmp/ already match the expected checksums.
     rbp_sums = os.path.join(os.getcwd(), "assets", "rbp_md5sum.csv")
-    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    tmp_path = os.path.join(os.getcwd(), tmp_dir_path)
     valid_paths = check_sums(
-        tmp_dir=tmp_dir,
+        tmp_dir=tmp_path,
         md5sum_file=rbp_sums,
         dir_prefix="rbp_tables_",
         required_files=rbp_files,
@@ -37,8 +37,8 @@ def fetch_rbp_tables() -> List[str]:
     
     bucket = 'digbyb'
     
-    os.makedirs(tmp_dir, exist_ok=True)
-    local_dir = tempfile.mkdtemp(prefix="rbp_tables_", dir=tmp_dir)
+    os.makedirs(tmp_path, exist_ok=True)
+    local_dir = tempfile.mkdtemp(prefix="rbp_tables_", dir=tmp_path)
     downloaded: List[str] = []
 
     for filename in rbp_files:

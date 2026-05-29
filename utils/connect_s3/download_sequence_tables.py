@@ -47,7 +47,7 @@ def _build_annotation_dict_from_paths(valid_paths: List[str]) -> Dict[str, objec
         if filename.startswith("hg38_sequence_"):
             annotation_dict.setdefault("cscd", []).append(path)
         else:
-            annotation_dict[filename.replace(".parquet", "")] = path
+            annotation_dict[filename.replace("_sequence.parquet", "")] = path
     return annotation_dict
 
 
@@ -84,7 +84,7 @@ def _download_required_files(
     
     return sequence_dict
 
-def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]]):
+def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp"):
     """
     1.5GB locally
     """
@@ -101,9 +101,9 @@ def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]]):
 
     required_files = other_files + cscd_files
     sequence_sums = os.path.join(os.getcwd(), "assets", "sequence_md5sum.csv")
-    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    tmp_path = os.path.join(os.getcwd(), tmp_dir_path)
     valid_paths = check_sums(
-        tmp_dir=tmp_dir, 
+        tmp_dir=tmp_path, 
         md5sum_file=sequence_sums, 
         dir_prefix="sequence_tables_",
         required_files=required_files
@@ -120,7 +120,7 @@ def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]]):
 
     bucket = 'digbyb'
 
-    cwd_tmp = os.path.join(os.getcwd(), "tmp")
+    cwd_tmp = os.path.join(os.getcwd(), tmp_dir_path)
     os.makedirs(cwd_tmp, exist_ok=True)
     local_dir = tempfile.mkdtemp(prefix="sequence_tables_", dir=cwd_tmp)
     sequence_dict = _download_required_files(s3, bucket, local_dir, other_files, cscd_chrs)

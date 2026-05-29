@@ -13,7 +13,8 @@ def instantiate_driver(config: Dict[str, Any]):
     """
     remote_executor = executors.MultiThreadingExecutor(max_tasks=config.get("cpus", 1))
 
-    lookup_tables = fetch_lookup_tables()
+    tmp_dir = config.get("global_parameters", {}).get("tmp_dir", "tmp")
+    lookup_tables = fetch_lookup_tables(tmp_dir_path=tmp_dir)
 
     dr = (
         driver.Builder()

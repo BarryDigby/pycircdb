@@ -7,7 +7,7 @@ from typing import List
 from utils.md5sum_check import check_sums
 
 
-def fetch_mirna_tables() -> List[str]:
+def fetch_mirna_tables(tmp_dir_path: str = "tmp") -> List[str]:
     """
     Download (or return cached) miRNA chromosome parquet files.
     """
@@ -18,9 +18,9 @@ def fetch_mirna_tables() -> List[str]:
 
     # Check whether cached files in tmp/ already match the expected checksums.
     mirna_sums = os.path.join(os.getcwd(), "assets", "mirna_md5sum.csv")
-    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    tmp_path = os.path.join(os.getcwd(), tmp_dir_path)
     valid_paths = check_sums(
-        tmp_dir=tmp_dir,
+        tmp_dir=tmp_path,
         md5sum_file=mirna_sums,
         dir_prefix="mirna_tables_",
         required_files=mirna_files,
@@ -37,8 +37,8 @@ def fetch_mirna_tables() -> List[str]:
     
     bucket = 'digbyb'
     
-    os.makedirs(tmp_dir, exist_ok=True)
-    local_dir = tempfile.mkdtemp(prefix="mirna_tables_", dir=tmp_dir)
+    os.makedirs(tmp_path, exist_ok=True)
+    local_dir = tempfile.mkdtemp(prefix="mirna_tables_", dir=tmp_path)
     downloaded: List[str] = []
 
     for filename in mirna_files:
