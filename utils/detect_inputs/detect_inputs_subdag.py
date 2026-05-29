@@ -40,7 +40,24 @@ def database_lookup(broadcast_config: Dict[str, Any]) -> Dict[str, Dict[str, pl.
     reference = broadcast_config.get("reference")
     lookup_pl = broadcast_config.get("lookup_pl")
     db_name = broadcast_config.get("db_name")
+    zero_based = broadcast_config.get("zero_based", True)
+    
     input_pl = pl.read_csv(broadcast_config.get("file_path"), new_columns=['ID'])
+    
+    if not zero_based:
+        input_pl = input_pl.with_columns(
+            pl.when(col('ID').str.contains(r'^.*?:\d+-\d+.*$'))
+            .then(
+                pl.concat_str([
+                    col('ID').str.extract(r'^(.*?:\d+-)(\d+)(.*)$', 1),
+                    (col('ID').str.extract(r'^(.*?:\d+-)(\d+)(.*)$', 2).cast(pl.Int64) - 1).cast(pl.Utf8),
+                    col('ID').str.extract(r'^(.*?:\d+-)(\d+)(.*)$', 3)
+                ])
+            )
+            .otherwise(col('ID'))
+            .alias('ID')
+        )
+
     hits = lookup_pl.filter(col(f"{reference}").is_in(input_pl['ID']))
     
     return {sample_name: {db_name: hits}}
