@@ -42,21 +42,6 @@ def cli(ctx, config):
         ctx.obj['cfg'] = None
     ctx.obj['lookup_dict'] = None
 
-@cli.command('config')
-@click.option(
-    "-n",
-    "--name",
-    type=str,
-    default="config",
-    help="Name of the generated config file (without extension)."
-)
-def _init_create_config(name: str):
-    """Interactive builder to initialize a configuration file."""
-    # TODO: In the future, use `rich` or `questionary` here to prompt the user
-    # for input files, reference choices (hg19/hg38), and zero_based logic.
-    click.echo(f"Initializing interactive configuration builder for '{name}.json'...")
-    create_config(name)
-
 
 @cli.command('annotate')
 @click.pass_context
