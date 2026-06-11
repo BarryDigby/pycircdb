@@ -29,14 +29,25 @@ import utils.rbp.rbp_driver as rbp_driver
     required=False,
     help="Path to the JSON config file containing workflow parameters."
 )
+@click.option(
+    "-v",
+    "--verbose",
+    type=click.IntRange(0, 2),
+    default=1,
+    help="Verbosity level: 0 (silent), 1 (high-level, default), 2 (all outputs)."
+)
 @click.pass_context
-def cli(ctx, config):
+def cli(ctx, config, verbose):
     """Main CLI tool."""
     ctx.ensure_object(dict)
+    
+    ctx.obj['verbose'] = verbose
+    
     if config:
-        cfg = load_config(config)
+        cfg = load_config(config, verbose=verbose)
         if not cfg.get('samples'):
             raise click.UsageError("Configuration file must contain a 'samples' dictionary.")
+        cfg.update({'verbose': verbose})
         ctx.obj['cfg'] = cfg
     else:
         ctx.obj['cfg'] = None
@@ -94,13 +105,9 @@ def rbp(ctx):
 
 def run_annotation(**kwargs):
     """Run the annotation workflow."""
-    print("Running annotation with configuration:")
-    print(kwargs)
-    for k, v in kwargs.items():
-         print(f"  {k}: {v}")
 
     # Lookup tables
-    lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs)
+    lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs, verbose=kwargs.get('verbose', 1))
 
     tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
 
@@ -138,7 +145,7 @@ def run_fasta(lookup_dict=None, **kwargs):
     # Generate lookup tables if not provided (i.e., fasta running standalone)
     if lookup_dict is None:
         print("Computing lookup tables from scratch...")
-        lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs)
+        lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs, verbose=kwargs.get("verbose", 1))
     else:
         print("Using lookup tables from previous step...")
     
@@ -174,7 +181,7 @@ def run_mirna(lookup_dict=None, **kwargs):
 
     if lookup_dict is None:
         print("Computing lookup tables from scratch...")
-        lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs)
+        lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs, verbose=kwargs.get("verbose", 1))
     else:
         print("Using lookup tables from previous step...")
 
@@ -207,7 +214,7 @@ def run_rbp(lookup_dict=None, **kwargs):
 
     if lookup_dict is None:
         print("Computing lookup tables from scratch...")
-        lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs)
+        lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs, verbose=kwargs.get("verbose", 1))
     else:
         print("Using lookup tables from previous step...")
 

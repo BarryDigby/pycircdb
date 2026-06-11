@@ -1,2 +1,0 @@
-circbank	hg19	hg38	aliasID	exonNumber	Exons	circType	splicedLength	Assembly	geneID	geneSymbol	bestTranscriptID	Biotype	Tissue	Age	samples	HighConfidence	source
-hsa_RP11-206L10.8_0000100	chr1:741178-745550|-	chr1:805798-810170|-	"hsa_circ_0002333	hsa_circTCONS_l2_00000968_001	hsa-RP11-206L10_0001"	3.0	"741178-741271	743953-744003	745446-745550"	Exon-Intergenic	247	hg19	ENSG00000230092.3	RP11-206L10.8	ENST00000447500.1	processed_transcript					

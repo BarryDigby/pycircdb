@@ -28,11 +28,15 @@ def sequences__arraystar(
     arraystar, sequence
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
-    sequence_pl = pl.read_parquet(per_sample_sequence.get("sequence_tables"))
 
-    sequence_hits = sequence_pl.filter(col("arraystar").is_in(lookup_pl['arraystar']))
+    query = (
+        pl.scan_parquet(per_sample_sequence.get("sequence_tables"))
+        .filter(col("arraystar").is_in(lookup_pl['arraystar']))
+    )
 
-    return {per_sample_sequence.get("sample_name"): {'arraystar': sequence_hits}}
+    df = query.collect(streaming=True)
+
+    return {per_sample_sequence.get("sample_name"): {'arraystar': df}}
 
 
 @config.when(db_name='circatlas')
@@ -43,11 +47,15 @@ def sequences__circatlas(
     circatlas, sequence
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
-    sequence_pl = pl.read_parquet(per_sample_sequence.get("sequence_tables"))
 
-    sequence_hits = sequence_pl.filter(col("circatlas").is_in(lookup_pl['circatlas']))
+    query = (
+        pl.scan_parquet(per_sample_sequence.get("sequence_tables"))
+        .filter(col("circatlas").is_in(lookup_pl['circatlas']))
+    )
 
-    return {per_sample_sequence.get("sample_name"): {'circatlas': sequence_hits}}
+    df = query.collect(streaming=True)
+
+    return {per_sample_sequence.get("sample_name"): {'circatlas': df}}
 
 
 @config.when(db_name='circbank')
@@ -58,11 +66,15 @@ def sequences__circbank(
     circbank, sequence
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
-    sequence_pl = pl.read_parquet(per_sample_sequence.get("sequence_tables"))
 
-    sequence_hits = sequence_pl.filter(col("circbank").is_in(lookup_pl['circbank']))
+    query = (
+        pl.scan_parquet(per_sample_sequence.get("sequence_tables"))
+        .filter(col("circbank").is_in(lookup_pl['circbank']))
+    )
 
-    return {per_sample_sequence.get("sample_name"): {'circbank': sequence_hits}}
+    df = query.collect(streaming=True)
+
+    return {per_sample_sequence.get("sample_name"): {'circbank': df}}
 
 
 @config.when(db_name='circbase')
@@ -73,11 +85,15 @@ def sequences__circbase(
     circbase, sequence
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
-    sequence_pl = pl.read_parquet(per_sample_sequence.get("sequence_tables"))
 
-    sequence_hits = sequence_pl.filter(col("circbase").is_in(lookup_pl['circbase']))
+    query = (
+        pl.scan_parquet(per_sample_sequence.get("sequence_tables"))
+        .filter(col("circbase").is_in(lookup_pl['circbase']))
+    )
 
-    return {per_sample_sequence.get("sample_name"): {'circbase': sequence_hits}}
+    df = query.collect(streaming=True)
+
+    return {per_sample_sequence.get("sample_name"): {'circbase': df}}
 
 
 @config.when(db_name='circpedia')
@@ -88,11 +104,15 @@ def sequences__circpedia(
     circpedia, sequence
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
-    sequence_pl = pl.read_parquet(per_sample_sequence.get("sequence_tables"))
 
-    sequence_hits = sequence_pl.filter(col("circpedia").is_in(lookup_pl['circpedia']))
+    query = (
+        pl.scan_parquet(per_sample_sequence.get("sequence_tables"))
+        .filter(col("circpedia").is_in(lookup_pl['circpedia']))
+    )
 
-    return {per_sample_sequence.get("sample_name"): {'circpedia': sequence_hits}}
+    df = query.collect(streaming=True)
+
+    return {per_sample_sequence.get("sample_name"): {'circpedia': df}}
 
 
 @config.when(db_name='circRNA_DB')
@@ -103,11 +123,15 @@ def sequences__circRNA_DB(
     circRNA_DB, sequence
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
-    sequence_pl = pl.read_parquet(per_sample_sequence.get("sequence_tables"))
 
-    sequence_hits = sequence_pl.filter(col("circRNA_DB").is_in(lookup_pl['circRNA_DB']))
+    query = (
+        pl.scan_parquet(per_sample_sequence.get("sequence_tables"))
+        .filter(col("circRNA_DB").is_in(lookup_pl['circRNA_DB']))
+    )
 
-    return {per_sample_sequence.get("sample_name"): {'circRNA_DB': sequence_hits}}
+    df = query.collect(streaming=True)
+
+    return {per_sample_sequence.get("sample_name"): {'circRNA_DB': df}}
 
 
 @config.when(db_name='cscd')
@@ -119,14 +143,18 @@ def sequences__cscd(
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
     sequence_paths = per_sample_sequence.get("sequence_tables")
-    sequence_hits = pl.DataFrame()
-
+    
+    queries = []
     for sequence_path in sequence_paths:
-        sequence_pl = pl.read_parquet(sequence_path)
-        hits = sequence_pl.filter(col("circRNA").is_in(lookup_pl['hg38']))
-        sequence_hits = pl.concat([sequence_hits, hits], how='vertical')
+        query = (
+            pl.scan_parquet(sequence_path)
+            .filter(col("circRNA").is_in(lookup_pl['hg38']))
+        )
+        queries.append(query)
+        
+    df = pl.concat(queries, how='vertical').collect(streaming=True)
 
-    return {per_sample_sequence.get("sample_name"): {'cscd': sequence_hits}}
+    return {per_sample_sequence.get("sample_name"): {'cscd': df}}
 
 
 def write_to_output_dir(

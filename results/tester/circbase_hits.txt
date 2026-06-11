@@ -1,2 +1,0 @@
-circbase	hg19	hg38	chrom	chromStart	chromEnd	score	strand	thickStart	thickEnd	itemRGB	blockCount	blockSizes	blockStarts
-hsa_circ_0002333	chr1:741178-745550|-	chr1:805798-810170|-	chr1	741178	745550	1000	-	745550	745550	0,0,255	3	93,50,104	0,2775,4268
