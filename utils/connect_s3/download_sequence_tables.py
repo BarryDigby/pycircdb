@@ -1,12 +1,11 @@
 import os
-import tempfile
 import boto3
 import polars as pl
 from typing import Dict, List
 from botocore import UNSIGNED
 from botocore.config import Config
 
-from utils.md5sum_check import check_sums
+from utils.md5sum_check import _load_expected_sums, _file_md5sum
 
 def _extract_cscd_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]) -> List[str]:
     """Collect required CSCD chromosome names from lookup hits."""
@@ -56,7 +55,7 @@ def _download_required_files(
     bucket: str,
     local_dir: str,
     other_files: List[str],
-    cscd_chroms: List[str]
+    cscd_files: List[str]
 ) -> Dict[str, object]:
     """Download required sequence parquet files from S3, including CSCD chromosome-specific tables."""
     sequence_dict: Dict[str, object] = {}
@@ -71,8 +70,7 @@ def _download_required_files(
         except Exception as e:
             print(f"Warning: Failed to download {filename} -> {e}")
 
-    for chrom in cscd_chroms:
-        cscd_filename = f"hg38_sequence_{chrom}.parquet"
+    for cscd_filename in cscd_files:
         object_key = f"sequence_tables/{cscd_filename}"
         local_path = os.path.join(local_dir, cscd_filename)
 
@@ -101,33 +99,45 @@ def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tm
 
     required_files = other_files + cscd_files
     sequence_sums = os.path.join(os.getcwd(), "assets", "sequence_md5sum.csv")
-    tmp_path = os.path.join(os.getcwd(), tmp_dir_path)
-    valid_paths = check_sums(
-        tmp_dir=tmp_path, 
-        md5sum_file=sequence_sums, 
-        dir_prefix="sequence_tables_",
-        required_files=required_files
-    )
-
-    if valid_paths:
-        return _build_annotation_dict_from_paths(valid_paths)    
+    expected_sums = _load_expected_sums(sequence_sums)
     
-    s3 = boto3.client(
-        's3', 
-        region_name='eu-north-1',
-        config=Config(signature_version=UNSIGNED)
-    )
+    local_dir = os.path.join(os.getcwd(), tmp_dir_path, "sequence_tables")
+    os.makedirs(local_dir, exist_ok=True)
 
-    bucket = 'digbyb'
-
-    cwd_tmp = os.path.join(os.getcwd(), tmp_dir_path)
-    os.makedirs(cwd_tmp, exist_ok=True)
-    local_dir = tempfile.mkdtemp(prefix="sequence_tables_", dir=cwd_tmp)
-    sequence_dict = _download_required_files(s3, bucket, local_dir, other_files, cscd_chrs)
+    missing_other = []
+    missing_cscd = []
+    valid_paths = []
     
-    cscd_count = len(sequence_dict.get("cscd", []))
-    non_cscd_count = len(sequence_dict) - (1 if "cscd" in sequence_dict else 0)
-    dl_files = non_cscd_count + cscd_count
-    print(f"Downloaded {dl_files} sequence tables to {local_dir}")
+    for filename in other_files:
+        file_path = os.path.join(local_dir, filename)
+        if os.path.isfile(file_path) and _file_md5sum(file_path).lower() == expected_sums.get(filename):
+            valid_paths.append(file_path)
+        else:
+            missing_other.append(filename)
+            
+    for filename in cscd_files:
+        file_path = os.path.join(local_dir, filename)
+        if os.path.isfile(file_path) and _file_md5sum(file_path).lower() == expected_sums.get(filename):
+            valid_paths.append(file_path)
+        else:
+            missing_cscd.append(filename)
 
-    return sequence_dict
+    if missing_other or missing_cscd:
+        s3 = boto3.client(
+            's3', 
+            region_name='eu-north-1',
+            config=Config(signature_version=UNSIGNED)
+        )
+        bucket = 'digbyb'
+
+        dl_files = len(missing_other) + len(missing_cscd)
+        print(f"Downloading {dl_files} missing sequence tables to {local_dir}")
+
+        _download_required_files(s3, bucket, local_dir, missing_other, missing_cscd)
+        
+        for filename in missing_other + missing_cscd:
+            valid_paths.append(os.path.join(local_dir, filename))
+    else:
+        print(f"Using cached files from {local_dir}; all MD5 checks passed.")
+
+    return _build_annotation_dict_from_paths(valid_paths)

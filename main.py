@@ -179,7 +179,7 @@ def run_mirna(lookup_dict=None, **kwargs):
         print("Using lookup tables from previous step...")
 
     tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
-    mirna_tables = fetch_mirna_tables(tmp_dir_path=tmp_dir)
+    mirna_tables = fetch_mirna_tables(lookup_dict, tmp_dir_path=tmp_dir)
 
     dr = (
         driver.Builder()
@@ -212,7 +212,7 @@ def run_rbp(lookup_dict=None, **kwargs):
         print("Using lookup tables from previous step...")
 
     tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
-    rbp_tables = fetch_rbp_tables(tmp_dir_path=tmp_dir)
+    rbp_tables = fetch_rbp_tables(lookup_dict, tmp_dir_path=tmp_dir)
 
     dr = (
         driver.Builder()

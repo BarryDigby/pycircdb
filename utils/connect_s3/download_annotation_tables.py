@@ -1,12 +1,11 @@
 import os
-import tempfile
 import boto3
 import polars as pl
 from typing import Dict, List
 from botocore import UNSIGNED
 from botocore.config import Config
 
-from utils.md5sum_check import check_sums
+from utils.md5sum_check import _load_expected_sums, _file_md5sum
 
 
 def _extract_cscd_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]) -> List[str]:
@@ -95,46 +94,58 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
         'circbank.parquet',
         'circbase.parquet',
         'circpedia.parquet',
-        'circRNA_DB.parquet'
+        'circRNA_DB.parquet',
+        'exorbase.parquet'
     ]
 
     required_files = other_files + cscd_files
 
     annotation_sums = os.path.join(os.getcwd(), "assets", "annotation_md5sum.csv")
-    tmp_dir = os.path.join(os.getcwd(), tmp_dir_path)
-    valid_paths = check_sums(
-        tmp_dir=tmp_dir,
-        md5sum_file=annotation_sums,
-        dir_prefix="annotation_tables_",
-        required_files=required_files,
-    )
-    if valid_paths:
-        return _build_annotation_dict_from_paths(valid_paths)
-
-    s3 = boto3.client(
-        's3',
-        region_name='eu-north-1',
-        config=Config(signature_version=UNSIGNED)
-    )
-
-    bucket = 'digbyb'
+    expected_sums = _load_expected_sums(annotation_sums)
     
-    cwd_tmp = os.path.join(os.getcwd(), tmp_dir_path)
-    os.makedirs(cwd_tmp, exist_ok=True)
-    local_dir = tempfile.mkdtemp(prefix="annotation_tables_", dir=cwd_tmp)
-    annotation_dict = _download_required_files(
-        s3=s3,
-        bucket=bucket,
-        local_dir=local_dir,
-        other_files=other_files,
-        cscd_files=cscd_files,
-    )
+    local_dir = os.path.join(os.getcwd(), tmp_dir_path, "annotation_tables")
+    os.makedirs(local_dir, exist_ok=True)
+    
+    missing_other = []
+    missing_cscd = []
+    valid_paths = []
+    
+    for filename in other_files:
+        file_path = os.path.join(local_dir, filename)
+        if os.path.isfile(file_path) and _file_md5sum(file_path).lower() == expected_sums.get(filename):
+            valid_paths.append(file_path)
+        else:
+            missing_other.append(filename)
+            
+    for filename in cscd_files:
+        file_path = os.path.join(local_dir, filename)
+        if os.path.isfile(file_path) and _file_md5sum(file_path).lower() == expected_sums.get(filename):
+            valid_paths.append(file_path)
+        else:
+            missing_cscd.append(filename)
 
-    cscd_count = len(annotation_dict.get("cscd", []))
-    non_cscd_count = len([k for k in annotation_dict.keys() if k != "cscd"])
-    dl_files = non_cscd_count + cscd_count
-    print(f"Downloaded {dl_files} annotation files to {local_dir}")
+    if missing_other or missing_cscd:
+        s3 = boto3.client(
+            's3',
+            region_name='eu-north-1',
+            config=Config(signature_version=UNSIGNED)
+        )
+        bucket = 'digbyb'
+        
+        dl_files = len(missing_other) + len(missing_cscd)
+        print(f"Downloading {dl_files} missing annotation files to {local_dir}")
+        
+        _download_required_files(
+            s3=s3,
+            bucket=bucket,
+            local_dir=local_dir,
+            other_files=missing_other,
+            cscd_files=missing_cscd,
+        )
+        
+        for filename in missing_other + missing_cscd:
+            valid_paths.append(os.path.join(local_dir, filename))
+    else:
+        print(f"Using cached files from {local_dir}; all MD5 checks passed.")
 
-    return annotation_dict
-
-
+    return _build_annotation_dict_from_paths(valid_paths)

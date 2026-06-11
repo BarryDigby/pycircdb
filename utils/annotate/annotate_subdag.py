@@ -21,7 +21,7 @@ def annotate__arraystar(
     annotation_pl = pl.read_parquet(per_sample_annotation.get("annotation_parquet_path"))
     annotated_hits = annotation_pl.filter(col("arraystar").is_in(lookup_pl['arraystar']))
     annotated_hits = annotated_hits.join(lookup_pl.select(['arraystar', 'hg38']), on='arraystar', how='left')
-    annotated_hits = annotated_hits.select(['arraystar', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['arraystar', 'hg19']])
+    annotated_hits = annotated_hits.select(['arraystar', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['arraystar', 'hg19', 'hg38']])
     
     return {per_sample_annotation.get("sample_name"): {'arraystar': annotated_hits}}
 
@@ -47,7 +47,7 @@ def annotate__circbank(
     annotation_pl = pl.read_parquet(per_sample_annotation.get("annotation_parquet_path"))
     annotated_hits = annotation_pl.filter(col("circbank").is_in(lookup_pl['circbank']))
     annotated_hits = annotated_hits.join(lookup_pl.select(['circbank', 'hg38']), on='circbank', how='left')
-    annotated_hits = annotated_hits.select(['circbank', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circbank', 'hg19']])
+    annotated_hits = annotated_hits.select(['circbank', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circbank', 'hg19', 'hg38']])
     
     return {per_sample_annotation.get("sample_name"): {'circbank': annotated_hits}}
 
@@ -64,7 +64,7 @@ def annotate__circbase(
     annotated_hits = annotation_pl.filter(col("name").is_in(lookup_pl['circbase']))
     annotated_hits = annotated_hits.join(lookup_pl.select(['circbase', 'hg38']), left_on='name', right_on='circbase', how='left')
     annotated_hits = annotated_hits.rename({'name': 'circbase'})
-    annotated_hits = annotated_hits.select(['circbase', 'hg19', 'hg38'] + [column for column in annotation_pl.columns if column not in ['name', 'hg19']])
+    annotated_hits = annotated_hits.select(['circbase', 'hg19', 'hg38'] + [column for column in annotation_pl.columns if column not in ['name', 'hg19', 'hg38']])
 
     return {per_sample_annotation.get("sample_name"): {'circbase': annotated_hits}}
 
@@ -80,7 +80,7 @@ def annotate__circpedia(
     annotation_pl = pl.read_parquet(per_sample_annotation.get("annotation_parquet_path"))
     annotated_hits = annotation_pl.filter(col("circpedia").is_in(lookup_pl['circpedia']))
     annotated_hits = annotated_hits.join(lookup_pl.select(['circpedia', 'hg19']), on='circpedia', how='left')
-    annotated_hits = annotated_hits.select(['circpedia', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circpedia', 'hg38']])
+    annotated_hits = annotated_hits.select(['circpedia', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circpedia', 'hg19', 'hg38']])
 
     return {per_sample_annotation.get("sample_name"): {'circpedia': annotated_hits}}
 
@@ -96,7 +96,7 @@ def annotate__circrna_db(
     annotation_pl = pl.read_parquet(per_sample_annotation.get("annotation_parquet_path"))
     annotated_hits = annotation_pl.filter(col("circRNA_DB").is_in(lookup_pl['circRNA_DB']))
     annotated_hits = annotated_hits.join(lookup_pl.select(['circRNA_DB', 'hg38']), on='circRNA_DB', how='left')
-    annotated_hits = annotated_hits.select(['circRNA_DB', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circRNA_DB', 'hg19']])
+    annotated_hits = annotated_hits.select(['circRNA_DB', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circRNA_DB', 'hg19', 'hg38']])
     
     return {per_sample_annotation.get("sample_name"): {'circRNA_DB': annotated_hits}}
 
@@ -123,6 +123,22 @@ def annotate__cscd(
             annotated_hits = pl.concat([annotated_hits, filtered_annotation], how='vertical')
         
     return {per_sample_annotation.get("sample_name"): {'cscd': annotated_hits}}
+
+
+@config.when(db_name='exorbase')
+def annotate__exorbase(
+    per_sample_annotation: PerSampleAnnotation
+) -> AnnotateResult:
+    """
+    exorbase, hg38
+    """
+    lookup_pl = per_sample_annotation.get("lookup_hits")
+    annotation_pl = pl.read_parquet(per_sample_annotation.get("annotation_parquet_path"))
+    annotated_hits = annotation_pl.filter(col("exorbase").is_in(lookup_pl['exorbase']))
+    annotated_hits = annotated_hits.join(lookup_pl.select(['exorbase', 'hg19']), on='exorbase', how='left')
+    annotated_hits = annotated_hits.select(['exorbase', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['exorbase', 'hg19', 'hg38']])
+
+    return {per_sample_annotation.get("sample_name"): {'exorbase': annotated_hits}}
 
 
 def write_to_output_dir(

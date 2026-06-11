@@ -1,0 +1,14 @@
+{
+  "global_parameters": {
+    "cpu": 1,
+    "output_dir": "results/",
+    "tmp_dir": "tmp/"
+  },
+  "samples": {
+    "tester": {
+      "input": "test/tester.txt",
+      "reference": "hg38",
+      "zero_based": false
+    }
+  }
+}

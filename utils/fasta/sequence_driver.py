@@ -25,7 +25,7 @@ def broadcast_sequence(
     """
     for sample_name, lookup_hits in lookup_dict.items():
         for db_name, pl_hits in lookup_hits.items():
-            if pl_hits.is_empty():
+            if pl_hits.is_empty() or db_name not in sequence_tables:
                 continue
 
             yield {
