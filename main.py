@@ -112,7 +112,7 @@ def run_annotation(**kwargs):
     tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
 
     # Pull annotation tables
-    annotation_tables = fetch_annotation_tables(lookup_dict, tmp_dir_path=tmp_dir)
+    annotation_tables = fetch_annotation_tables(lookup_dict, tmp_dir_path=tmp_dir, verbose=kwargs.get("verbose", 1))
 
     # Annotate + write to file in parallel
     dr = (
@@ -139,18 +139,13 @@ def run_fasta(lookup_dict=None, **kwargs):
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
         **kwargs: Configuration parameters.
     """
-    print("Running FASTA generation with configuration:")
-    print(kwargs)
-    
     # Generate lookup tables if not provided (i.e., fasta running standalone)
     if lookup_dict is None:
-        print("Computing lookup tables from scratch...")
         lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs, verbose=kwargs.get("verbose", 1))
-    else:
-        print("Using lookup tables from previous step...")
+
     
     tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
-    sequence_tables = fetch_sequence_tables(lookup_dict, tmp_dir_path=tmp_dir)
+    sequence_tables = fetch_sequence_tables(lookup_dict, tmp_dir_path=tmp_dir, verbose=kwargs.get("verbose", 1))
 
     dr = (
         driver.Builder()
@@ -176,17 +171,12 @@ def run_mirna(lookup_dict=None, **kwargs):
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
         **kwargs: Configuration parameters.
     """
-    print("Running miRNA interaction output with configuration:")
-    print(kwargs)
-
     if lookup_dict is None:
-        print("Computing lookup tables from scratch...")
         lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs, verbose=kwargs.get("verbose", 1))
-    else:
-        print("Using lookup tables from previous step...")
+
 
     tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
-    mirna_tables = fetch_mirna_tables(lookup_dict, tmp_dir_path=tmp_dir)
+    mirna_tables = fetch_mirna_tables(lookup_dict, tmp_dir_path=tmp_dir, verbose=kwargs.get("verbose", 1))
 
     dr = (
         driver.Builder()
@@ -209,17 +199,12 @@ def run_rbp(lookup_dict=None, **kwargs):
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
         **kwargs: Configuration parameters.
     """
-    print("Running RBP interaction output with configuration:")
-    print(kwargs)
-
     if lookup_dict is None:
-        print("Computing lookup tables from scratch...")
         lookup_dict = instantiate_lookup_driver.instantiate_driver(kwargs, verbose=kwargs.get("verbose", 1))
-    else:
-        print("Using lookup tables from previous step...")
+
 
     tmp_dir = kwargs.get("global_parameters", {}).get("tmp_dir", "tmp")
-    rbp_tables = fetch_rbp_tables(lookup_dict, tmp_dir_path=tmp_dir)
+    rbp_tables = fetch_rbp_tables(lookup_dict, tmp_dir_path=tmp_dir, verbose=kwargs.get("verbose", 1))
 
     dr = (
         driver.Builder()

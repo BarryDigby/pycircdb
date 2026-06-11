@@ -1,8 +1,11 @@
 from hamilton.htypes import Collect, Parallelizable
 from typing import Dict, Any, Union, List
 from pathlib import Path
+from rich.console import Console
 import os
 import polars as pl
+
+console = Console(stderr=True, highlight=False)
 
 
 miRNABroadcast = Dict[str, Union[str, str, pl.DataFrame, List, None]]
@@ -25,16 +28,25 @@ def broadcast_mirna(
         Per database hit, per sample, miRNA annotation.
     """
     for sample_name, lookup_hits in lookup_dict.items():
+        # Combine all hg38 IDs for this sample across all databases
+        hg38_series = []
         for db_name, pl_hits in lookup_hits.items():
-            for chromosome_mirna_path in mirna_tables:
+            if not pl_hits.is_empty() and "hg38" in pl_hits.columns:
+                hg38_series.append(pl_hits["hg38"].str.split("|").list.first())
+                
+        if not hg38_series:
+            continue
+            
+        unique_hg38_ids = pl.concat(hg38_series).unique().to_list()
 
-                yield {
-                    "sample_name": sample_name,
-                    "output_dir": config['global_parameters'].get("output_dir"),
-                    "db_name": db_name,
-                    "lookup_hits": pl_hits,
-                    "mirna_table": chromosome_mirna_path,
-                }
+        for chromosome_mirna_path in mirna_tables:
+            yield {
+                "sample_name": sample_name,
+                "output_dir": config['global_parameters'].get("output_dir"),
+                "unique_hg38_ids": unique_hg38_ids,
+                "mirna_table": chromosome_mirna_path,
+                "verbose": config.get("verbose", 1)
+            }
 
 
 def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
@@ -43,15 +55,17 @@ def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
     """
     output_dir = broadcast_mirna["output_dir"]
     sample_name = broadcast_mirna["sample_name"]
-    lookup_pl = broadcast_mirna["lookup_hits"]
+    unique_hg38_ids = broadcast_mirna["unique_hg38_ids"]
     mirna_table = broadcast_mirna["mirna_table"]
+    verbose = broadcast_mirna.get("verbose", 1)
     chromosome = Path(mirna_table).stem.split("_")[-1]
+    
+    if verbose >= 2:
+        console.print(f"  Starting miRNA extraction for {sample_name}: [cyan]processing {chromosome}[/cyan]")
         
-    hg38_ids = lookup_pl["hg38"].str.split("|").list.first()
-
     query = (
         pl.scan_parquet(mirna_table)
-        .filter(pl.col("circRNA").is_in(hg38_ids))
+        .filter(pl.col("circRNA").is_in(unique_hg38_ids))
         )
 
     df = query.collect(streaming=True)
@@ -77,4 +91,4 @@ def close_mirna(
     """
     Closes the miRNA subdag.
     """
-    print("miRNA subdag complete.")
+    console.print("miRNA subdag complete.", style="bold green")

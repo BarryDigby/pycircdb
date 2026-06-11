@@ -4,8 +4,12 @@ import polars as pl
 from typing import Dict, List
 from botocore import UNSIGNED
 from botocore.config import Config
+from rich.console import Console
+from rich.text import Text
 
 from utils.md5sum_check import _load_expected_sums, _file_md5sum
+
+console = Console(stderr=True, highlight=False)
 
 def _extract_cscd_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]) -> List[str]:
     """Collect required CSCD chromosome names from lookup hits."""
@@ -55,12 +59,15 @@ def _download_required_files(
     bucket: str,
     local_dir: str,
     other_files: List[str],
-    cscd_files: List[str]
+    cscd_files: List[str],
+    verbose: int = 1
 ) -> Dict[str, object]:
     """Download required sequence parquet files from S3, including CSCD chromosome-specific tables."""
     sequence_dict: Dict[str, object] = {}
 
     for filename in other_files:
+        if verbose >= 2:
+            console.print(f"  Downloading {filename}", style="cyan")
         object_key = f"sequence_tables/{filename}"
         local_path = os.path.join(local_dir, filename)
         
@@ -68,9 +75,11 @@ def _download_required_files(
             s3.download_file(bucket, object_key, local_path)
             sequence_dict[filename.replace("_sequence.parquet", "")] = local_path
         except Exception as e:
-            print(f"Warning: Failed to download {filename} -> {e}")
+            console.print(f"Warning: Failed to download {filename} -> {e}", style="bold red")
 
     for cscd_filename in cscd_files:
+        if verbose >= 2:
+            console.print(f"  Downloading {cscd_filename}", style="cyan")
         object_key = f"sequence_tables/{cscd_filename}"
         local_path = os.path.join(local_dir, cscd_filename)
 
@@ -78,11 +87,11 @@ def _download_required_files(
             s3.download_file(bucket, object_key, local_path)
             sequence_dict.setdefault("cscd", []).append(local_path)
         except Exception as e:
-            print(f"Warning: Failed to download {cscd_filename} -> {e}")
+            console.print(f"Warning: Failed to download {cscd_filename} -> {e}", style="bold red")
     
     return sequence_dict
 
-def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp"):
+def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp", verbose: int = 1):
     """
     1.5GB locally
     """
@@ -103,6 +112,9 @@ def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tm
     
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "sequence_tables")
     os.makedirs(local_dir, exist_ok=True)
+
+    if verbose >= 1:
+        console.print(Text(f"Checking for sequence tables in {local_dir}...", style="bold green"))
 
     missing_other = []
     missing_cscd = []
@@ -131,13 +143,18 @@ def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tm
         bucket = 'digbyb'
 
         dl_files = len(missing_other) + len(missing_cscd)
-        print(f"Downloading {dl_files} missing sequence tables to {local_dir}")
+        if verbose >= 1:
+            console.print(Text(f"Downloading {dl_files} missing sequence tables to {local_dir}...", style="bold green"))
 
-        _download_required_files(s3, bucket, local_dir, missing_other, missing_cscd)
+        _download_required_files(s3, bucket, local_dir, missing_other, missing_cscd, verbose=verbose)
         
         for filename in missing_other + missing_cscd:
             valid_paths.append(os.path.join(local_dir, filename))
+            
+        if verbose >= 1:
+            console.print(Text("Successfully downloaded missing sequence tables.", style="bold green"))
     else:
-        print(f"Using cached files from {local_dir}; all MD5 checks passed.")
+        if verbose >= 1:
+            console.print(Text(f"Using cached files from {local_dir}; all MD5 checks passed.", style="bold green"))
 
     return _build_annotation_dict_from_paths(valid_paths)

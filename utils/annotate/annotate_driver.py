@@ -3,9 +3,12 @@ from hamilton.execution import executors
 from hamilton.htypes import Collect, Parallelizable
 from typing import Dict, Any, Union, List, Generator
 from utils.connect_s3.download_annotation_tables import fetch_annotation_tables
+from rich.console import Console
 
 import polars as pl
 import utils.annotate.annotate_subdag as annotate_subdag
+
+console = Console(stderr=True, highlight=False)
 
 
 AnnotateBroadcast = Dict[str, Union[str, List[str], pl.DataFrame, None]]
@@ -38,6 +41,7 @@ def broadcast_annotation(
                 "db_name": db_name,
                 "annotation_parquet_path": annotation_parquet_path,
                 "lookup_hits": pl_hits,
+                "verbose": config.get("verbose", 1)
             }
 
 
@@ -49,8 +53,12 @@ def instatiate_annotation_subdag(
     Hamilton within Hamilton to extract params and cast as config for subdag.
     """
     db_name = broadcast_annotation.get("db_name")
+    sample_name = broadcast_annotation.get("sample_name")
+    verbose = broadcast_annotation.get("verbose", 1)
     per_sample_annotation = dict(broadcast_annotation)
-    print(f'starting {per_sample_annotation.get("sample_name")} -- {db_name} annotation')
+    
+    if verbose >= 2:
+        console.print(f"  Starting annotation for {sample_name}: [cyan]{db_name} annotated[/cyan]")
 
     dr = (
         driver.Builder()
@@ -71,4 +79,4 @@ def close_annotation(
     """
     Closes the annotaton subdag.
     """
-    print("Annotation subdag complete.")
+    console.print("Annotation subdag complete.", style="bold green")

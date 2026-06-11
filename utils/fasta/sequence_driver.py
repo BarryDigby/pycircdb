@@ -4,7 +4,10 @@ from hamilton.execution import executors
 from hamilton.htypes import Collect, Parallelizable
 from typing import Dict, Any, Union, List
 from utils.connect_s3.download_sequence_tables import fetch_sequence_tables
+from rich.console import Console
 import utils.fasta.sequence_subdag as sequence_subdag
+
+console = Console(stderr=True, highlight=False)
 
 SequenceBroadcast = Dict[str, Union[str, str, pl.DataFrame, List, None]]
 
@@ -34,6 +37,7 @@ def broadcast_sequence(
                 "db_name": db_name,
                 "lookup_hits": pl_hits,
                 "sequence_tables": sequence_tables.get(db_name),
+                "verbose": config.get("verbose", 1)
             }
 
 def instantiate_sequence_subdag(broadcast_sequence: SequenceBroadcast) -> None:
@@ -41,7 +45,12 @@ def instantiate_sequence_subdag(broadcast_sequence: SequenceBroadcast) -> None:
     Builds a Hamilton driver, passes sequence table paths and config to driver.
     """
     db_name = broadcast_sequence.get("db_name")
+    sample_name = broadcast_sequence.get("sample_name")
+    verbose = broadcast_sequence.get("verbose", 1)
     per_sample_sequence = dict(broadcast_sequence)
+
+    if verbose >= 2:
+        console.print(f"  Starting FASTA extraction for {sample_name}: [cyan]{db_name} extracted[/cyan]")
 
     dr = (
         driver.Builder()
@@ -62,4 +71,4 @@ def close_sequence(
     """
     Closes the sequence subdag.
     """
-    print("Sequence subdag complete.")
+    console.print("Sequence subdag complete.", style="bold green")

@@ -4,8 +4,12 @@ import polars as pl
 from typing import Dict, List
 from botocore import UNSIGNED
 from botocore.config import Config
+from rich.console import Console
+from rich.text import Text
 
 from utils.md5sum_check import _load_expected_sums, _file_md5sum
+
+console = Console(stderr=True, highlight=False)
 
 
 def _extract_cscd_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]) -> List[str]:
@@ -58,32 +62,37 @@ def _download_required_files(
     local_dir: str,
     other_files: List[str],
     cscd_files: List[str],
+    verbose: int = 1
 ) -> Dict[str, object]:
     """Download required annotation tables and return file mapping."""
     annotation_dict: Dict[str, object] = {}
 
     for filename in other_files:
+        if verbose >= 2:
+            console.print(f"  Downloading {filename}", style="cyan")
         object_key = f"db_tables/{filename}"
         local_path = os.path.join(local_dir, filename)
         try:
             s3.download_file(bucket, object_key, local_path)
             annotation_dict[filename.replace(".parquet", "")] = local_path
         except Exception as e:
-            print(f"Warning: Failed to download {filename} -> {e}")
+            console.print(f"Warning: Failed to download {filename} -> {e}", style="bold red")
 
     for filename in cscd_files:
+        if verbose >= 2:
+            console.print(f"  Downloading {filename}", style="cyan")
         object_key = f"CSCD_cleaned/{filename}"
         local_path = os.path.join(local_dir, filename)
         try:
             s3.download_file(bucket, object_key, local_path)
             annotation_dict.setdefault("cscd", []).append(local_path)
         except Exception as e:
-            print(f"Warning: Failed to download {filename} -> {e}")
+            console.print(f"Warning: Failed to download {filename} -> {e}", style="bold red")
 
     return annotation_dict
 
 
-def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp"):
+def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp", verbose: int = 1):
     """
     Check if we need all CSCD annotations, or just a subset based on the lookup results.
     """
@@ -105,6 +114,9 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
     
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "annotation_tables")
     os.makedirs(local_dir, exist_ok=True)
+
+    if verbose >= 1:
+        console.print(Text(f"Checking for annotation tables in {local_dir}...", style="bold green"))
     
     missing_other = []
     missing_cscd = []
@@ -133,7 +145,8 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
         bucket = 'digbyb'
         
         dl_files = len(missing_other) + len(missing_cscd)
-        print(f"Downloading {dl_files} missing annotation files to {local_dir}")
+        if verbose >= 1:
+            console.print(Text(f"Downloading {dl_files} missing annotation files to {local_dir}...", style="bold green"))
         
         _download_required_files(
             s3=s3,
@@ -141,11 +154,16 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
             local_dir=local_dir,
             other_files=missing_other,
             cscd_files=missing_cscd,
+            verbose=verbose
         )
         
         for filename in missing_other + missing_cscd:
             valid_paths.append(os.path.join(local_dir, filename))
+            
+        if verbose >= 1:
+            console.print(Text("Successfully downloaded missing annotation tables.", style="bold green"))
     else:
-        print(f"Using cached files from {local_dir}; all MD5 checks passed.")
+        if verbose >= 1:
+            console.print(Text(f"Using cached files from {local_dir}; all MD5 checks passed.", style="bold green"))
 
     return _build_annotation_dict_from_paths(valid_paths)

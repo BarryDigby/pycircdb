@@ -4,7 +4,12 @@ import polars as pl
 from botocore import UNSIGNED
 from botocore.config import Config
 from typing import List, Dict
+from rich.console import Console
+from rich.text import Text
+
 from utils.md5sum_check import _load_expected_sums, _file_md5sum
+
+console = Console(stderr=True, highlight=False)
 
 def _extract_cscd_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]) -> List[str]:
     """Collect required CSCD chromosome names from lookup hits."""
@@ -37,7 +42,7 @@ def _extract_cscd_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]
     cscd_chrs -= {None}
     return sorted(cscd_chrs)
 
-def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp") -> List[str]:
+def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp", verbose: int = 1) -> List[str]:
     """
     Download (or return cached) RBP chromosome parquet files based on lookup results.
     """
@@ -50,6 +55,9 @@ def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "rbp_tables")
     os.makedirs(local_dir, exist_ok=True)
     
+    if verbose >= 1:
+        console.print(Text(f"Checking for RBP tables in {local_dir}...", style="bold green"))
+        
     missing_files = []
     valid_paths = []
     
@@ -68,8 +76,12 @@ def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir
         )
         bucket = 'digbyb'
         
-        print(f"Downloading {len(missing_files)} missing RBP files to {local_dir}")
+        if verbose >= 1:
+            console.print(Text(f"Downloading {len(missing_files)} missing RBP files to {local_dir}...", style="bold green"))
+            
         for filename in missing_files:
+            if verbose >= 2:
+                console.print(f"  Downloading {filename}", style="cyan")
             object_key = f"RBP/{filename}"
             local_path = os.path.join(local_dir, filename)
             
@@ -77,8 +89,12 @@ def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir
                 s3.download_file(bucket, object_key, local_path)
                 valid_paths.append(local_path)
             except Exception as e:
-                print(f"Warning: Failed to download {filename} -> {e}")
+                console.print(f"Warning: Failed to download {filename} -> {e}", style="bold red")
+                
+        if verbose >= 1:
+            console.print(Text("Successfully downloaded missing RBP tables.", style="bold green"))
     else:
-        print(f"Using cached files from {local_dir}; all MD5 checks passed.")
+        if verbose >= 1:
+            console.print(Text(f"Using cached files from {local_dir}; all MD5 checks passed.", style="bold green"))
 
     return valid_paths
