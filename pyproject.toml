@@ -1,6 +1,9 @@
 [project]
-name = "parse-inputs"
+name = "pycircdb"
 version = "0.1.0"
+description = "pycircdb: integrated circRNA database annotation for computational workflows."
+readme = "README.md"
+authors = [{ name = "Barry Digby", email = "b.digby237@gmail.com" }]
 requires-python = ">=3.14"
 dependencies = [
     "apache-hamilton[lsp]>=1.90.0",
@@ -20,6 +23,9 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["*", "assets", "utils", "utils.*"]
 
+[tool.setuptools]
+py-modules = ["main", "config"]
+
 [tool.setuptools.package-data]
 "*" = ["assets/*.csv"]
 
@@ -36,3 +42,6 @@ testpaths = ["tests"]
 [tool.coverage.run]
 source = ["utils", "config.py", "main.py"]
 omit = ["tests/*", "venv/*"]
+[project.scripts]
+pycircdb = "main:cli"
+

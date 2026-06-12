@@ -1,0 +1,31 @@
+Metadata-Version: 2.4
+Name: pycircdb
+Version: 0.1.0
+Summary: pycircdb: integrated circRNA database annotation for computational workflows.
+Author-email: Barry Digby <b.digby237@gmail.com>
+Requires-Python: >=3.14
+Description-Content-Type: text/markdown
+Requires-Dist: apache-hamilton[lsp]>=1.90.0
+Requires-Dist: boto3>=1.42.89
+Requires-Dist: click>=8.3.2
+Requires-Dist: polars>=1.39.3
+Requires-Dist: pyyaml>=6.0.3
+Requires-Dist: rich-click>=1.9.7
+Requires-Dist: sf-hamilton[lsp]>=1.89.0
+
+# pycircdb
+
+A command-line tool for identifying and annotating circRNA interactions.
+
+## Installation
+
+```bash
+pip install pycircdb
+```
+
+## Usage
+
+```bash
+pycircdb --help
+```
+

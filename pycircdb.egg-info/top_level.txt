@@ -1,6 +1,10 @@
 assets
+build
+config
 db_tables
+dist
 lookup_tables
+main
 results
 sequence_tables
 test
