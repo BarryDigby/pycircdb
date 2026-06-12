@@ -96,9 +96,15 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
     """
     Check if we need all CSCD annotations, or just a subset based on the lookup results.
     """
-    cscd_chrs = _extract_cscd_chromosomes(lookup_results)
+    # Extract active databases from the lookup hits
+    active_dbs = set()
+    for db_dict in lookup_results.values():
+        active_dbs.update([db.lower() for db in db_dict.keys()])
+
+    cscd_chrs = _extract_cscd_chromosomes(lookup_results) if "cscd" in active_dbs else []
     cscd_files = [f"hg38_circrna_{chrom}.parquet" for chrom in cscd_chrs]
-    other_files = [
+    
+    all_possible_other = [
         'arraystar.parquet',
         'circbank.parquet',
         'circbase.parquet',
@@ -106,6 +112,8 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
         'circRNA_DB.parquet',
         'exorbase.parquet'
     ]
+    
+    other_files = [f for f in all_possible_other if f.replace(".parquet", "").lower() in active_dbs]
 
     required_files = other_files + cscd_files
 
@@ -118,7 +126,7 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
     os.makedirs(local_dir, exist_ok=True)
 
     if verbose >= 1:
-        console.print(Text(f"Checking for annotation tables in {local_dir}...", style="bold green"))
+        console.print(Text(f"Checking for annotation tables in {local_dir}...", style="bold white"))
     
     missing_other = []
     missing_cscd = []
@@ -148,7 +156,7 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
         
         dl_files = len(missing_other) + len(missing_cscd)
         if verbose >= 1:
-            console.print(Text(f"Downloading {dl_files} missing annotation files to {local_dir}...", style="bold green"))
+            console.print(Text(f"Downloading {dl_files} missing annotation files to {local_dir}...", style="bold yellow"))
         
         _download_required_files(
             s3=s3,

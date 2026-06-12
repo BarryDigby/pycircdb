@@ -27,7 +27,7 @@ DEFAULT_CONFIG_DATA = {
 }
 
 class ToolConfig(TypedDict, total=False):
-    input: List[str]
+    file_path: List[str]
     reference: Union[str, List[str], None]
     zero_based: Union[bool, List[bool], None]
     max_tasks: int
@@ -74,14 +74,14 @@ def print_config_panel(config: ToolConfig, user_config_path: Optional[str] = Non
         
     sample_table = Table(show_header=True, header_style="bold blue", box=box.ROUNDED, expand=True)
     sample_table.add_column("Sample Name", style="bold green")
-    sample_table.add_column("Input File", style="yellow")
+    sample_table.add_column("File Path", style="yellow")
     sample_table.add_column("Ref", style="cyan", justify="center")
     sample_table.add_column("0-based", style="magenta", justify="center")
 
     for sample_name, sample_info in config.get("samples", {}).items():
         sample_table.add_row(
             sample_name,
-            str(sample_info.get("input", sample_info.get("file_path", ""))),
+            str(sample_info.get("file_path", "")),
             str(sample_info.get("reference", "")),
             str(sample_info.get("zero_based", ""))
         )
