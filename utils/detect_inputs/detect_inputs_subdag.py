@@ -21,7 +21,7 @@ def broadcast_config(config: Dict[str, Any], lookup_tables: Dict[str, str]) -> P
         for sample_name, sample_info in config.get("samples", {}).items():
             combined_input = {
                 "sample_name": sample_name,
-                "file_path": sample_info.get("input"),
+                "file_path": sample_info.get("file_path"),
                 "reference": sample_info.get("reference"),
                 "zero_based": sample_info.get("zero_based"),
                 "lookup_pl": lookup_pl,

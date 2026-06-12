@@ -58,7 +58,7 @@ def fetch_mirna_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_d
     os.makedirs(local_dir, exist_ok=True)
     
     if verbose >= 1:
-        console.print(Text(f"Checking for miRNA tables in {local_dir}...", style="bold green"))
+        console.print(Text(f"Checking for miRNA tables in {local_dir}...", style="bold white"))
         
     missing_files = []
     valid_paths = []
@@ -79,7 +79,7 @@ def fetch_mirna_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_d
         bucket = 'digbyb'
         
         if verbose >= 1:
-            console.print(Text(f"Downloading {len(missing_files)} missing miRNA files to {local_dir}...", style="bold green"))
+            console.print(Text(f"Downloading {len(missing_files)} missing miRNA files to {local_dir}...", style="bold yellow"))
             
         for filename in missing_files:
             if verbose >= 2:
