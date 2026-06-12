@@ -64,9 +64,9 @@ def process_pipeline(ctx, processors, config, verbose):
     if cfg:
         # Populate missing config for printing correctly
         if 'annotate_databases' not in cfg:
-            cfg['annotate_databases'] = ['arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
+            cfg['annotate_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
         if 'fasta_databases' not in cfg:
-            cfg['fasta_databases'] = ['arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
+            cfg['fasta_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
         if 'mirna_algorithms' not in cfg:
             cfg['mirna_algorithms'] = ['miranda', 'pita', 'targetscan']
             
@@ -94,14 +94,14 @@ def annotate(ctx, database):
         raise click.UsageError("A config file must be provided via -c/--config before subcommands (e.g., main.py -c config.json annotate)")
 
     if database:
-        valid_dbs = {'arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase'}
+        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase'}
         parsed_dbs = [d.strip().lower() for d in database.split(',')]
         invalid_dbs = [d for d in parsed_dbs if d not in valid_dbs]
         if invalid_dbs:
             raise click.BadParameter(f"Invalid databases provided: {', '.join(invalid_dbs)}. Valid options are: {', '.join(sorted(valid_dbs))}")
         cfg['annotate_databases'] = parsed_dbs
     else:
-        cfg['annotate_databases'] = ["arraystar", "circbank", "circbase", "circpedia", "circrna_db", "cscd", "exorbase"]
+        cfg['annotate_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
 
     def processor():
         lookup_dict = ctx.obj.get('lookup_dict')
@@ -127,14 +127,14 @@ def fasta(ctx, database):
         raise click.UsageError("A config file must be provided via -c/--config")
 
     if database:
-        valid_dbs = {'arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd'}
+        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd'}
         parsed_dbs = [d.strip().lower() for d in database.split(',')]
         invalid_dbs = [d for d in parsed_dbs if d not in valid_dbs]
         if invalid_dbs:
             raise click.BadParameter(f"Invalid databases provided: {', '.join(invalid_dbs)}. Valid options are: {', '.join(sorted(valid_dbs))}")
         cfg['fasta_databases'] = parsed_dbs
     else:
-        cfg['fasta_databases'] = ["arraystar", "circbank", "circbase", "circpedia", "circrna_db", "cscd"]
+        cfg['fasta_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
 
     def processor():
         lookup_dict = ctx.obj.get('lookup_dict')
