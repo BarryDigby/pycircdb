@@ -26,7 +26,9 @@ def fetch_lookup_tables(tmp_dir_path: str = "tmp", verbose: int = 1) -> Dict[str
         "exorbase_lookup.parquet"
     ]
     
-    lookup_sums = os.path.join(os.getcwd(), "assets", "lookup_md5sum.csv")
+    from pathlib import Path
+    assets_dir = Path(__file__).resolve().parent.parent.parent / "assets"
+    lookup_sums = str(assets_dir / "lookup_md5sum.csv")
     expected_sums = _load_expected_sums(lookup_sums)
     
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "lookup_tables")

@@ -152,7 +152,7 @@ def sequences__cscd(
         )
         queries.append(query)
         
-    df = pl.concat(queries, how='vertical').collect(streaming=True)
+    df = pl.concat(queries, how='vertical').collect(engine='streaming')
 
     return {per_sample_sequence.get("sample_name"): {'cscd': df}}
 

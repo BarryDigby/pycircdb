@@ -107,7 +107,10 @@ def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tm
     ]
 
     required_files = other_files + cscd_files
-    sequence_sums = os.path.join(os.getcwd(), "assets", "sequence_md5sum.csv")
+    
+    from pathlib import Path
+    assets_dir = Path(__file__).resolve().parent.parent.parent / "assets"
+    sequence_sums = str(assets_dir / "sequence_md5sum.csv")
     expected_sums = _load_expected_sums(sequence_sums)
     
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "sequence_tables")

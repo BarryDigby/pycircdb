@@ -1,0 +1,7 @@
+apache-hamilton[lsp]>=1.90.0
+boto3>=1.42.89
+click>=8.3.2
+polars>=1.39.3
+pyyaml>=6.0.3
+rich-click>=1.9.7
+sf-hamilton[lsp]>=1.89.0

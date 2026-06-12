@@ -1,0 +1,8 @@
+assets
+db_tables
+lookup_tables
+results
+sequence_tables
+test
+tmp
+utils

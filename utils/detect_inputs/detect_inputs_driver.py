@@ -11,7 +11,7 @@ def instantiate_driver(config: Dict[str, Any], verbose: int = 1):
     Downloads lookup tables to tmp/
     Builds a Hamilton driver, passes lookup table paths and config to driver.
     """
-    remote_executor = executors.MultiThreadingExecutor(max_tasks=config.get("cpus", 1))
+    remote_executor = executors.MultiThreadingExecutor(max_tasks=config.get("global_parameters", {}).get("max_tasks", 1))
 
     tmp_dir = config.get("global_parameters", {}).get("tmp_dir", "tmp")
     lookup_tables = fetch_lookup_tables(tmp_dir_path=tmp_dir, verbose=verbose)

@@ -1,0 +1,13 @@
+{
+    "global_parameters": {
+        "max_tasks": 1,
+        "output_dir": "results/ci_test/"
+    },
+    "samples": {
+        "ci_test_sample": {
+            "file_path": "test/tester.txt",
+            "reference": "hg38",
+            "zero_based": true
+        }
+    }
+}

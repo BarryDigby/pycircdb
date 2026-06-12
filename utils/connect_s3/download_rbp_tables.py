@@ -49,7 +49,9 @@ def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir
     cscd_chrs = _extract_cscd_chromosomes(lookup_results)
     rbp_files = [f"hg38_rbp_{chrom}.parquet" for chrom in cscd_chrs]
 
-    rbp_sums = os.path.join(os.getcwd(), "assets", "rbp_md5sum.csv")
+    from pathlib import Path
+    assets_dir = Path(__file__).resolve().parent.parent.parent / "assets"
+    rbp_sums = str(assets_dir / "rbp_md5sum.csv")
     expected_sums = _load_expected_sums(rbp_sums)
     
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "rbp_tables")

@@ -49,7 +49,9 @@ def fetch_mirna_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_d
     cscd_chrs = _extract_cscd_chromosomes(lookup_results)
     mirna_files = [f"hg38_mirna_{chrom}.parquet" for chrom in cscd_chrs]
 
-    mirna_sums = os.path.join(os.getcwd(), "assets", "mirna_md5sum.csv")
+    from pathlib import Path
+    assets_dir = Path(__file__).resolve().parent.parent.parent / "assets"
+    mirna_sums = str(assets_dir / "mirna_md5sum.csv")
     expected_sums = _load_expected_sums(mirna_sums)
     
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "mirna_tables")

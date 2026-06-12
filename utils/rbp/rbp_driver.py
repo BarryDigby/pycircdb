@@ -68,7 +68,7 @@ def rbp_hits(broadcast_rbp: RBPBroadcast) -> None:
         .filter(pl.col("circRNA").is_in(unique_hg38_ids))
         )
 
-    df = query.collect(streaming=True)
+    df = query.collect(engine='streaming')
     
     if not df.is_empty():
         p = Path(output_dir)

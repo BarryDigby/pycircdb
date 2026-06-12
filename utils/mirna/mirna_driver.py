@@ -45,6 +45,7 @@ def broadcast_mirna(
                 "output_dir": config['global_parameters'].get("output_dir"),
                 "unique_hg38_ids": unique_hg38_ids,
                 "mirna_table": chromosome_mirna_path,
+                "mirna_algorithms": config.get("mirna_algorithms"),
                 "verbose": config.get("verbose", 1)
             }
 
@@ -57,6 +58,7 @@ def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
     sample_name = broadcast_mirna["sample_name"]
     unique_hg38_ids = broadcast_mirna["unique_hg38_ids"]
     mirna_table = broadcast_mirna["mirna_table"]
+    mirna_algorithms = broadcast_mirna.get("mirna_algorithms")
     verbose = broadcast_mirna.get("verbose", 1)
     chromosome = Path(mirna_table).stem.split("_")[-1]
     
@@ -66,9 +68,14 @@ def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
     query = (
         pl.scan_parquet(mirna_table)
         .filter(pl.col("circRNA").is_in(unique_hg38_ids))
-        )
+    )
 
-    df = query.collect(streaming=True)
+    if mirna_algorithms:
+        # Use simple str.contains across the algorithms provided, case insensitive
+        pattern = f"(?i){'|'.join(mirna_algorithms)}"
+        query = query.filter(pl.col("Algorithm").str.contains(pattern))
+
+    df = query.collect(engine="streaming")
     
     if not df.is_empty():
         p = Path(output_dir)

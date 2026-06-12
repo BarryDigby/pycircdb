@@ -1,0 +1,38 @@
+name: Cross-Platform Integration Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11"] # Adjust to your primary version
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync
+
+      - name: Run Pipeline (Annotate, FASTA, miRNA)
+        # This acts as our end-to-end integration test.
+        # Since it runs on a fresh machine, it WILL attempt to connect to S3
+        # anonymously, download the assets, and process test/tester.txt
+        run: |
+          uv run main.py -c test_config.json -v 2 annotate fasta mirna

@@ -11,3 +11,28 @@ dependencies = [
     "rich-click>=1.9.7",
     "sf-hamilton[lsp]>=1.89.0",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*", "assets", "utils", "utils.*"]
+
+[tool.setuptools.package-data]
+"*" = ["assets/*.csv"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov=utils --cov=config --cov-report=term-missing --cov-report=html"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["utils", "config.py", "main.py"]
+omit = ["tests/*", "venv/*"]

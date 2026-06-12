@@ -109,7 +109,9 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
 
     required_files = other_files + cscd_files
 
-    annotation_sums = os.path.join(os.getcwd(), "assets", "annotation_md5sum.csv")
+    from pathlib import Path
+    assets_dir = Path(__file__).resolve().parent.parent.parent / "assets"
+    annotation_sums = str(assets_dir / "annotation_md5sum.csv")
     expected_sums = _load_expected_sums(annotation_sums)
     
     local_dir = os.path.join(os.getcwd(), tmp_dir_path, "annotation_tables")
