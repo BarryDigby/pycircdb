@@ -1,6 +1,6 @@
 md5sum,file
 0dc1101a194f1246cf235c63eed48de7,arraystar_lookup.parquet
-0861fab2584f37bf4a1974d76363bd8a,circatlas_lookup.parquet
+26211694f19947cc83937b19e290a003,circatlas_lookup.parquet
 8e0e0137edd85e6cd4e53561c6acef17,circbank_lookup.parquet
 be8106eadc150221791929d260ab1fe9,circbase_lookup.parquet
 a3771b403d3738f0b36563dfbc9b2ad6,circpedia_lookup.parquet

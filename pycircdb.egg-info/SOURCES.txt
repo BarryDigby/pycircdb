@@ -8,8 +8,6 @@ pycircdb.egg-info/dependency_links.txt
 pycircdb.egg-info/entry_points.txt
 pycircdb.egg-info/requires.txt
 pycircdb.egg-info/top_level.txt
-sequence_tables/extract_sequences.py
-sequence_tables/split_cscd_by_chr.py
 utils/__init__.py
 utils/md5sum_check.py
 utils/output_mapping.py
