@@ -4,7 +4,7 @@ version = "0.1.2"
 description = "pycircdb: integrated circRNA database annotation for computational workflows."
 readme = "README.md"
 authors = [{ name = "Barry Digby", email = "b.digby237@gmail.com" }]
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 dependencies = [
     "apache-hamilton[lsp]>=1.90.0",
     "boto3>=1.42.89",
