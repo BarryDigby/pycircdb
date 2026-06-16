@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pycircdb
-Version: 0.1.1
+Version: 0.1.2
 Summary: pycircdb: integrated circRNA database annotation for computational workflows.
 Author-email: Barry Digby <b.digby237@gmail.com>
 Requires-Python: >=3.14
