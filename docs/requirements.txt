@@ -1,0 +1,4 @@
+Sphinx==5.0.2
+sphinx-argparse
+sphinx-rtd-theme
+Jinja2<3.1
