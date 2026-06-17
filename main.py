@@ -88,7 +88,7 @@ def process_pipeline(ctx, processors, config, verbose):
 )
 @click.pass_context
 def annotate(ctx, database):
-    """Annotate circRNAs using a JSON configuration file."""
+    """Retrieve circRNA annotations from specified databases."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config before subcommands (e.g., main.py -c config.json annotate)")
@@ -121,7 +121,7 @@ def annotate(ctx, database):
 )
 @click.pass_context
 def fasta(ctx, database):
-    """Output circRNA sequences in FASTA format."""
+    """Retrieve circRNA sequences in FASTA format."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config")
@@ -154,7 +154,7 @@ def fasta(ctx, database):
 )
 @click.pass_context
 def mirna(ctx, algorithm):
-    """Output miRNA interactions for identified circRNAs."""
+    """Retrieve miRNA interactions for identified circRNAs."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config")
@@ -179,7 +179,7 @@ def mirna(ctx, algorithm):
 @cli.command('rbp')
 @click.pass_context
 def rbp(ctx):
-    """Output RBP interactions for identified circRNAs."""
+    """Retrieve RBP interactions for identified circRNAs."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config")
@@ -229,7 +229,7 @@ def run_annotation(lookup_dict=None, **kwargs):
 
 
 def run_fasta(lookup_dict=None, **kwargs):
-    """Generate FASTA output from circRNA sequences.
+    """Retrieve circRNA sequences in FASTA format.
     
     Args:
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
@@ -268,7 +268,7 @@ def run_fasta(lookup_dict=None, **kwargs):
 
 
 def run_mirna(lookup_dict=None, **kwargs):
-    """Output miRNA interactions for identified circRNAs.
+    """Retrieve miRNA interactions for identified circRNAs.
 
     Args:
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
@@ -296,7 +296,7 @@ def run_mirna(lookup_dict=None, **kwargs):
 
 
 def run_rbp(lookup_dict=None, **kwargs):
-    """Output RBP interactions for identified circRNAs.
+    """Retrieve RBP interactions for identified circRNAs.
 
     Args:
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.

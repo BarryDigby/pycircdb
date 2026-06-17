@@ -2,6 +2,7 @@ README.md
 config.py
 main.py
 pyproject.toml
+docs/conf.py
 pycircdb.egg-info/PKG-INFO
 pycircdb.egg-info/SOURCES.txt
 pycircdb.egg-info/dependency_links.txt
