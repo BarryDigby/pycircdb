@@ -27,19 +27,5 @@ py-modules = ["main", "config"]
 [tool.setuptools.package-data]
 "*" = ["assets/*.csv"]
 
-[dependency-groups]
-dev = [
-    "pytest>=9.0.3",
-    "pytest-cov>=7.1.0",
-]
-
-[tool.pytest.ini_options]
-addopts = "--cov=utils --cov=config --cov-report=term-missing --cov-report=html"
-testpaths = ["tests"]
-
-[tool.coverage.run]
-source = ["utils", "config.py", "main.py"]
-omit = ["tests/*", "venv/*"]
 [project.scripts]
 pycircdb = "main:cli"
-

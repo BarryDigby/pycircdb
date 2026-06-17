@@ -1,8 +1,0 @@
-assets
-build
-config
-dist
-docs
-main
-test
-utils
