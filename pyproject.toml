@@ -25,7 +25,7 @@ include = ["*", "assets", "utils", "utils.*"]
 py-modules = ["main", "config"]
 
 [tool.setuptools.package-data]
-"*" = ["assets/*.csv"]
+"*" = ["assets/*.csv", "assets/demo/*"]
 
 [project.scripts]
 pycircdb = "main:cli"

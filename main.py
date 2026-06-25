@@ -76,6 +76,37 @@ def process_pipeline(ctx, processors, config, verbose):
     for processor in processors:
         processor()
 
+@cli.command('init-demo')
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Overwrite existing demo files if they already exist."
+)
+def init_demo(force):
+    """Write a ready-to-run minimal demo config and sample input to the current directory."""
+    demo_dir = Path(__file__).parent / "assets" / "demo"
+    targets = [
+        (demo_dir / "test_config.json", Path.cwd() / "test_config.json"),
+        (demo_dir / "tester.txt", Path.cwd() / "test" / "tester.txt"),
+    ]
+
+    for src, dest in targets:
+        if dest.exists() and not force:
+            raise click.UsageError(f"{dest} already exists. Use --force to overwrite.")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        console.print(f"[green]✓[/green] Wrote {dest}")
+
+    console.print(
+        "\n[bold]Demo files ready.[/bold] Try it out with:\n"
+        "  [cyan]pycircdb -c test_config.json -v 2 annotate -d 'arraystar,circbase' "
+        "fasta -d 'arraystar,circbase' mirna -a 'miRanda,TargetScan' rbp[/cyan]"
+    )
+
+    return lambda: None
+
 @cli.command('annotate')
 @click.option(
     "-d",

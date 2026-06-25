@@ -1,0 +1,13 @@
+{
+    "global_parameters": {
+        "max_tasks": 1,
+        "output_dir": "results/demo/"
+    },
+    "samples": {
+        "demo_sample": {
+            "file_path": "test/tester.txt",
+            "reference": "hg19",
+            "zero_based": true
+        }
+    }
+}

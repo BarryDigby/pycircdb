@@ -1,6 +1,60 @@
 Usage
 =====
 
+Once installed, you can run a minimal working demo of ``pycircdb`` using the following command:
+
+.. code-block:: bash
+
+   pycircdb init-demo
+   pycircdb -c test_config.json -v 2 annotate -d 'arraystar,circbase' fasta -d 'arraystar,circbase' mirna -a 'miRanda,TargetScan' rbp
+
+
+Resulting in the following output directory where the code was executed:
+
+.. code-block:: bash
+
+   results/
+   └── demo
+      └── demo_sample
+         ├── arraystar.fasta
+         ├── arraystar_hits.txt
+         ├── circbase.fasta
+         ├── circbase_hits.txt
+         ├── hg38_chr1_mirna_hits.txt.gz
+         └── hg38_chr1_rbp_hits.txt.gz
+
+   2 directories, 6 files
+
+
+Configuration
+=============
+
+To run ``pycircdb`` on your own data, you will need to create a configuration file (in JSON format) that specifies the paths to your input data and relevant global parameters.
+
+.. code-block:: json
+
+   {
+      "global_parameters": {
+         "max_tasks": 1,
+         "output_dir": "results/",
+         "tmp_dir": "tmp/"
+      },
+      "samples": {
+         "sample_one": {
+               "file_path": "path/to/sample1.txt",
+               "reference": "hg19",
+               "zero_based": true
+         },
+         "sample_two": {
+               "file_path": "path/to/sample2.txt",
+               "reference": "hg38",
+               "zero_based": false
+         }
+      }
+   }
+
+        
+
 ``pycircdb`` is a command-line tool driven by a JSON configuration file. The
 general invocation pattern is:
 
