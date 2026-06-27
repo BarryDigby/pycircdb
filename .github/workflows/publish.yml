@@ -1,9 +1,8 @@
 name: Publish to PyPI
 
 on:
-  push:
-    tags:
-      - 'v*' # Triggers automatically when you push a tag like 'v0.1.1'
+  release:
+    types: [published] # Triggers when a GitHub Release is published (create it from main)
 
 jobs:
   build-and-publish:
@@ -19,6 +18,8 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
