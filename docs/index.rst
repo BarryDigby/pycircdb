@@ -19,6 +19,8 @@ A stable internet connection is required to download database files however, onc
    
    quick_start
    running
+   usage
+   inputs
 
 
 
