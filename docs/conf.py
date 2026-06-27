@@ -11,7 +11,7 @@ copyright = '2026, Barry Digby'
 author = 'Barry Digby'
 
 release = '0.1'
-version = '0.1.2'
+version = '0.1.3'
 
 # -- General configuration
 
