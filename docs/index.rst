@@ -7,6 +7,8 @@ pycircdb is a command-line tool for annotating circRNAs using publicly available
    :alt: pycircdb
    :align: center
 
+
+
 .. note::
 
    pycircdb does not perform circRNA quantification - it just annotates the results from quantification tools.
@@ -14,13 +16,14 @@ pycircdb is a command-line tool for annotating circRNAs using publicly available
 A stable internet connection is required to download database files however, once downloaded, pycircdb will use the cached files for subsequent runs. 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: User Guide:
    
    quick_start
    running
-   usage
+   configuration
    inputs
+   outputs
 
 
 

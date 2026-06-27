@@ -1,8 +1,5 @@
-Running pycircdb
-================
-
 Invokation
------------
+===========
 
 When running pycircdb on the command line, the order of the commands is important. The general syntax is:
 
@@ -31,7 +28,7 @@ View the set of options and commands available in pycircdb:
 
 
 Global Options
-^^^^^^^^^^^^^^^^^^^
+--------------
 
 ``-c, --config``
    Path to the JSON configuration file.
@@ -46,7 +43,7 @@ Global Options
 **Note that the configuration parameter is required by all commands except `init-demo`.**
 
 Commands
-^^^^^^^^^
+---------
 
 ``init-demo``
    Create a demo folder with example input data and a configuration file.
@@ -64,7 +61,7 @@ Commands
    Retrieve RBP interactions for identified circRNAs.
 
 Command-level Options
-^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 ``init-demo``
     ``-f, --force``
