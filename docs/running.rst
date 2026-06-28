@@ -72,21 +72,24 @@ Command-level Options
 ``annotate``
     ``-d, --database``
         Comma-separated list of databases to use for annotation. Options are
-        ``arraystar``, ``circbank``, ``circbase``, ``circpedia``, ``circRNA_DB``, ``CSCD``, ``exorbase``
+        ``arraystar``, ``circatlas``, ``circbank``, ``circbase``, ``circpedia``, ``circRNA_DB``, ``CSCD``, ``exorbase``.
+        Not specifiying a database will result in all databases being used.
     ``-h, --help``
         Show this help message and exit.
 
 ``fasta``
     ``-d, --database``
         Comma-separated list of databases to use for sequence extraction. Options are
-        ``arraystar``, ``circbank``, ``circbase``, ``circpedia``, ``circRNA_DB``, ``CSCD``
+        ``arraystar``, ``circbank``, ``circbase``, ``circpedia``, ``circRNA_DB``, ``CSCD``.
+        Not specifiying a database will result in all databases being used.
     ``-h, --help``
         Show this help message and exit.
 
 ``mirna``
     ``-a, --algorithm``
         Comma-separated list of algorithms to use for miRNA binding site prediction. Options are
-        ``miRanda`` and/or ``PITA`` and/or ``TargetScan``
+        ``miRanda`` and/or ``PITA`` and/or ``TargetScan``.
+        Not specifiying an algorithm will result in all algorithms being used.
     ``-h, --help``
         Show this help message and exit.
 

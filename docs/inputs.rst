@@ -1,5 +1,5 @@
-pycircdb circRNA Inputs
-======================
+Inputs
+=======
 
 circRNA Formats
 -----------------

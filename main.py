@@ -113,7 +113,7 @@ def init_demo(force):
     "--database",
     type=str,
     required=False,
-    default="arraystar,circbank,circbase,circpedia,circRNA_DB,CSCD,exorbase",
+    default="arraystar,circatlas,circbank,circbase,circpedia,circRNA_DB,CSCD,exorbase",
     show_default=True,
     help="Comma-separated list of databases to use."
 )

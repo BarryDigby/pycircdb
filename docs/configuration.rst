@@ -1,5 +1,5 @@
-pycircdb Configuration
-====================
+Configuration
+==============
 
 A JSON configuration file is required to run pycircdb using the CLI global option ``-c``.
 
@@ -38,9 +38,9 @@ Sample Parameters
 Please note that all of the sample parameters are required for each sample. If any of these parameters are missing, pycircdb will raise an error and exit.
 
 Example Configuration File
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-... code-block:: json
+.. code-block:: json
 
     {
         "global_parameters": {
