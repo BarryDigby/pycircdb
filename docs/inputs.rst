@@ -9,14 +9,18 @@ pycircdb requires a 1-column text file with circRNAs in the following format:
 .. code-block:: text
 
     chr1:1000-2000|+
-    chr2:3000-4000|-
-    chr3:5000-6000|+
+    chr2:3000-4000
+    chr3:5000-6000|-
 
 
-Strand information is required, as all circRNA quantification tools report strand information.
+Strand information is optional.
 
 Quantification Tool Cheatsheet
 -----------------------------
+
+It is worthwhile noting that different quantification tools report circRNAs as zero-based or one-based coordinates.
+
+The following table will help reconcile your inputs vs. the outputs of pycircdb:
 
 .. list-table::
    :header-rows: 1
@@ -50,7 +54,12 @@ Quantification Tool Cheatsheet
      - 0-based
 
 
-:: note
+.. note::
 
-  circRNAs on the + strand of "KNIFE","NCLscan" are reported as 'chr:end-start'.
-  Please reverse the end and start coordinates to match the format of other tools.
+    Whilst pycircdb performs a fuzzy search of the input coordinates against databases, the output of pycircdb is zero-based.
+
+
+.. caution::
+
+    circRNAs on the + strand of "KNIFE","NCLscan" are reported as 'chr:end-start'.
+    Please reverse the end and start coordinates to match the format of other tools.

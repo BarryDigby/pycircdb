@@ -61,18 +61,9 @@ def cli(ctx, config, verbose):
 def process_pipeline(ctx, processors, config, verbose):
     """Execute all processors returned by subcommands after parsing args."""
     cfg = ctx.obj.get('cfg')
-    if cfg:
-        # Populate missing config for printing correctly
-        if 'annotate_databases' not in cfg:
-            cfg['annotate_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
-        if 'fasta_databases' not in cfg:
-            cfg['fasta_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
-        if 'mirna_algorithms' not in cfg:
-            cfg['mirna_algorithms'] = ['miranda', 'pita', 'targetscan']
-            
-        if verbose >= 2:
-            print_config_panel(cfg, config)
-            
+    if cfg and verbose >= 2:
+        print_config_panel(cfg, config)
+
     for processor in processors:
         processor()
 

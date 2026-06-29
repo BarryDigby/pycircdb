@@ -125,9 +125,9 @@ def print_config_panel(config: ToolConfig, user_config_path: Optional[str] = Non
     db_table.add_column("FASTA DB", style="magenta")
     db_table.add_column("miRNA Algorithms", style="green")
 
-    ann_dbs = config.get("annotate_databases", ["arraystar", "circbank", "circbase", "circpedia", "circrna_db", "cscd", "exorbase"])
-    fas_dbs = config.get("fasta_databases", ["arraystar", "circbank", "circbase", "circpedia", "circrna_db", "cscd"])
-    mir_algs = config.get("mirna_algorithms", ["miranda", "pita", "targetscan"])
+    ann_dbs = config.get("annotate_databases") or []
+    fas_dbs = config.get("fasta_databases") or []
+    mir_algs = config.get("mirna_algorithms") or []
 
     max_len = max(len(ann_dbs), len(fas_dbs), len(mir_algs))
     for i in range(max_len):
