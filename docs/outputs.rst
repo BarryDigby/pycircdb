@@ -429,10 +429,10 @@ RBP
 
 .. code-block:: text
 
-  circRNA                 Chr     Start       End         RBP_symbol  Information        RBP_numbers  source
-  chr18:12493071-12546904 chr18   12503834    12546883    AGO2        SBDH105-59581      24           common
-  chr18:12493071-12546904 chr18   12498779    12546872    FBL         SBDH120-145469     10           common
-  chr18:12493071-12546904 chr18   12493071    12546757    U2AF2       SBDH19-189369      100          common
+    circRNA                 Chr     Start       End         RBP_symbol  Information        RBP_numbers  source
+    chr18:12493071-12546904 chr18   12503834    12546883    AGO2        SBDH105-59581      24           common
+    chr18:12493071-12546904 chr18   12498779    12546872    FBL         SBDH120-145469     10           common
+    chr18:12493071-12546904 chr18   12493071    12546757    U2AF2       SBDH19-189369      100          common
 
 .. list-table::
    :header-rows: 1
