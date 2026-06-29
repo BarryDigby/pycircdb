@@ -92,18 +92,15 @@ Please see the [documentation](https://pycircdb.readthedocs.io/en/latest/) for a
   "samples": {
     "vromann": {
       "file_path": "test/vromann.txt",
-      "reference": "hg38",
-      "zero_based": true
+      "reference": "hg38"
     },
     "glioblastoma_plus_dcc": {
       "file_path": "test/rnase_plus/glioblastoma_RNase_plus_dcc.txt",
-      "reference": "hg38",
-      "zero_based": true
+      "reference": "hg38"
     },
     "glioblastoma_plus_ciriquant": {
       "file_path": "test/rnase_plus/glioblastoma_RNase_plus_ciriquant.txt",
-      "reference": "hg38",
-      "zero_based": true
+      "reference": "hg38"
     }
   }
 }

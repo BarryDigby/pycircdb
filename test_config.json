@@ -6,8 +6,7 @@
     "samples": {
         "ci_test_sample": {
             "file_path": "test/tester.txt",
-            "reference": "hg19",
-            "zero_based": true
+            "reference": "hg19"
         }
     }
 }

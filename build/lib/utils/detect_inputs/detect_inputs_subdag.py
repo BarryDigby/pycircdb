@@ -1,7 +1,53 @@
+import re
 import polars as pl
 from typing import Dict, Any, Tuple
 from polars import col
 from hamilton.htypes import Parallelizable, Collect
+
+
+# Matches 'chr:start-end' with an optional '|+'/'|-' strand suffix.
+_COORD_RE = re.compile(r'^(.*?):(\d+)-(\d+)(\|[+-])?$')
+
+
+def _expand_input_keys(ids) -> Tuple[set, set]:
+    """Expand input circRNA coordinates
+
+    Idea here is to let users pass stranded & nonstranded coordinates.
+    Next, we generate three coordinates for each, +/- 1 and the original.
+    e.g:
+    has strand (stranded_keys)
+    chr4:1228198-1241519|- >>> chr4:1228197-1241519|-, chr4:1228198-1241519|-, chr4:1228199-1241519|-
+    no strand (posonly_keys):
+    chr4:1228198-1241519 >>> chr4:1228197-1241519, chr4:1228198-1241519, chr4:1228199-1241519
+
+    Inputs that are not coordinates are ignored, as matching is performed
+    against the hg19/hg38 coordinate column.
+
+    Returns:
+        (stranded_keys, posonly_keys) where stranded_keys are matched verbatim
+        against the reference column and posonly_keys against a strand-stripped
+        reference.
+    """
+    stranded_keys = set()
+    posonly_keys = set()
+
+    for raw in ids:
+        if raw is None:
+            continue
+        match = _COORD_RE.match(raw)
+        if match is None:
+            continue
+        chrom, start, end, strand = match.group(1), int(match.group(2)), match.group(3), match.group(4)
+        for shifted_start in (start, start - 1, start + 1):
+            if shifted_start < 0:
+                continue
+            pos = f"{chrom}:{shifted_start}-{end}"
+            if strand:
+                stranded_keys.add(pos + strand)
+            else:
+                posonly_keys.add(pos)
+
+    return stranded_keys, posonly_keys
 
 
 def broadcast_config(config: Dict[str, Any], lookup_tables: Dict[str, str]) -> Parallelizable[Dict[str, Any]]:
@@ -21,9 +67,8 @@ def broadcast_config(config: Dict[str, Any], lookup_tables: Dict[str, str]) -> P
         for sample_name, sample_info in config.get("samples", {}).items():
             combined_input = {
                 "sample_name": sample_name,
-                "file_path": sample_info.get("input"),
+                "file_path": sample_info.get("file_path"),
                 "reference": sample_info.get("reference"),
-                "zero_based": sample_info.get("zero_based"),
                 "lookup_pl": lookup_pl,
                 "db_name": db_name
             }
@@ -40,35 +85,33 @@ def database_lookup(broadcast_config: Dict[str, Any]) -> Dict[str, Dict[str, pl.
     reference = broadcast_config.get("reference")
     lookup_pl = broadcast_config.get("lookup_pl")
     db_name = broadcast_config.get("db_name")
-    zero_based = broadcast_config.get("zero_based", True)
-    
+
     input_pl = pl.read_csv(broadcast_config.get("file_path"), has_header=False, new_columns=['ID'])
-    
-    if not zero_based:
-        input_pl = input_pl.with_columns(
-            pl.when(col('ID').str.contains(r'^.*?:\d+-\d+.*$'))
-            .then(
-                pl.concat_str([
-                    col('ID').str.extract(r'^(.*?:)(\d+)(-.*)$', 1),
-                    (col('ID').str.extract(r'^(.*?:)(\d+)(-.*)$', 2).cast(pl.Int64) - 1).cast(pl.Utf8),
-                    col('ID').str.extract(r'^(.*?:)(\d+)(-.*)$', 3)
-                ])
-            )
-            .otherwise(col('ID'))
-            .alias('ID')
-        )
 
-    hits = lookup_pl.filter(col(f"{reference}").is_in(input_pl['ID']))
+    # Tolerant matching (default behaviour): see _expand_input_keys for details.
+    stranded_keys, posonly_keys = _expand_input_keys(input_pl['ID'].to_list())
 
-    #print(f"Hits for sample {sample_name} in database {db_name}:")
-    #print(hits)
-    
+    reference_col = col(f"{reference}")
+    filters = []
+    if stranded_keys:
+        filters.append(reference_col.is_in(list(stranded_keys)))
+    if posonly_keys:
+        filters.append(reference_col.str.replace(r'\|[+-]$', '').is_in(list(posonly_keys)))
+
+    if filters:
+        filter_expr = filters[0]
+        for extra in filters[1:]:
+            filter_expr = filter_expr | extra
+        hits = lookup_pl.filter(filter_expr)
+    else:
+        hits = lookup_pl.clear()
+
     return {sample_name: {db_name: hits}}
 
 
 def return_collected_results(database_lookup: Collect[Dict[str, Dict[str, pl.DataFrame]]]) -> Dict[str, Dict[str, pl.DataFrame]]:
     """
-    Collate sample results into a single dictionary of {sample_name: {db_name: DataFrame}}"
+    Collate sample results into a single dictionary of {sample_name: {db_name: DataFrame}}
     
     Returns:
         A reduced dictionary where each sample name maps to a dictionary of database names and their corresponding hits DataFrames.

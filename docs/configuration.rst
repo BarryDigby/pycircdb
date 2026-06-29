@@ -32,8 +32,10 @@ Sample Parameters
 ``reference``
     The reference genome used to perform circRNA quantification.
 
-``zero_based``
-    Whether the circRNA coordinates in the input file are zero-based or one-based.
+Coordinate inputs are matched tolerantly: strand is honoured when supplied and
+ignored when absent, and each start coordinate is matched as-is as well as
++/-1 to absorb 0-based vs 1-based differences. You therefore do not need to
+declare the coordinate system of your input.
 
 Please note that all of the sample parameters are required for each sample. If any of these parameters are missing, pycircdb will raise an error and exit.
 
@@ -51,18 +53,15 @@ Example Configuration File
         "samples": {
             "vromann": {
             "file_path": "test/vromann.txt",
-            "reference": "hg38",
-            "zero_based": true
+            "reference": "hg38"
             },
             "glioblastoma_plus_dcc": {
             "file_path": "test/rnase_plus/glioblastoma_RNase_plus_dcc.txt",
-            "reference": "hg38",
-            "zero_based": true
+            "reference": "hg38"
             },
             "glioblastoma_plus_ciriquant": {
             "file_path": "test/rnase_plus/glioblastoma_RNase_plus_ciriquant.txt",
-            "reference": "hg38",
-            "zero_based": true
+            "reference": "hg38"
             }
         }
     }

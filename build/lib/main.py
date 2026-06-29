@@ -64,9 +64,9 @@ def process_pipeline(ctx, processors, config, verbose):
     if cfg:
         # Populate missing config for printing correctly
         if 'annotate_databases' not in cfg:
-            cfg['annotate_databases'] = ['arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
+            cfg['annotate_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
         if 'fasta_databases' not in cfg:
-            cfg['fasta_databases'] = ['arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
+            cfg['fasta_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
         if 'mirna_algorithms' not in cfg:
             cfg['mirna_algorithms'] = ['miranda', 'pita', 'targetscan']
             
@@ -76,32 +76,63 @@ def process_pipeline(ctx, processors, config, verbose):
     for processor in processors:
         processor()
 
+@cli.command('init-demo')
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Overwrite existing demo files if they already exist."
+)
+def init_demo(force):
+    """Write a ready-to-run minimal demo config and sample input to the current directory."""
+    demo_dir = Path(__file__).parent / "assets" / "demo"
+    targets = [
+        (demo_dir / "test_config.json", Path.cwd() / "test_config.json"),
+        (demo_dir / "tester.txt", Path.cwd() / "test" / "tester.txt"),
+    ]
+
+    for src, dest in targets:
+        if dest.exists() and not force:
+            raise click.UsageError(f"{dest} already exists. Use --force to overwrite.")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        console.print(f"[green]✓[/green] Wrote {dest}")
+
+    console.print(
+        "\n[bold]Demo files ready.[/bold] Try it out with:\n"
+        "  [cyan]pycircdb -c test_config.json -v 2 annotate -d 'arraystar,circbase' "
+        "fasta -d 'arraystar,circbase' mirna -a 'miRanda,TargetScan' rbp[/cyan]"
+    )
+
+    return lambda: None
+
 @cli.command('annotate')
 @click.option(
     "-d",
     "--database",
     type=str,
     required=False,
-    default="arraystar,circbank,circbase,circpedia,circRNA_DB,CSCD,exorbase",
+    default="arraystar,circatlas,circbank,circbase,circpedia,circRNA_DB,CSCD,exorbase",
     show_default=True,
     help="Comma-separated list of databases to use."
 )
 @click.pass_context
 def annotate(ctx, database):
-    """Annotate circRNAs using a JSON configuration file."""
+    """Retrieve circRNA annotations from specified databases."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config before subcommands (e.g., main.py -c config.json annotate)")
 
     if database:
-        valid_dbs = {'arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase'}
+        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase'}
         parsed_dbs = [d.strip().lower() for d in database.split(',')]
         invalid_dbs = [d for d in parsed_dbs if d not in valid_dbs]
         if invalid_dbs:
             raise click.BadParameter(f"Invalid databases provided: {', '.join(invalid_dbs)}. Valid options are: {', '.join(sorted(valid_dbs))}")
         cfg['annotate_databases'] = parsed_dbs
     else:
-        cfg['annotate_databases'] = ["arraystar", "circbank", "circbase", "circpedia", "circrna_db", "cscd", "exorbase"]
+        cfg['annotate_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
 
     def processor():
         lookup_dict = ctx.obj.get('lookup_dict')
@@ -121,20 +152,20 @@ def annotate(ctx, database):
 )
 @click.pass_context
 def fasta(ctx, database):
-    """Output circRNA sequences in FASTA format."""
+    """Retrieve circRNA sequences in FASTA format."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config")
 
     if database:
-        valid_dbs = {'arraystar', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd'}
+        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd'}
         parsed_dbs = [d.strip().lower() for d in database.split(',')]
         invalid_dbs = [d for d in parsed_dbs if d not in valid_dbs]
         if invalid_dbs:
             raise click.BadParameter(f"Invalid databases provided: {', '.join(invalid_dbs)}. Valid options are: {', '.join(sorted(valid_dbs))}")
         cfg['fasta_databases'] = parsed_dbs
     else:
-        cfg['fasta_databases'] = ["arraystar", "circbank", "circbase", "circpedia", "circrna_db", "cscd"]
+        cfg['fasta_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
 
     def processor():
         lookup_dict = ctx.obj.get('lookup_dict')
@@ -154,7 +185,7 @@ def fasta(ctx, database):
 )
 @click.pass_context
 def mirna(ctx, algorithm):
-    """Output miRNA interactions for identified circRNAs."""
+    """Retrieve miRNA interactions for identified circRNAs."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config")
@@ -179,7 +210,7 @@ def mirna(ctx, algorithm):
 @cli.command('rbp')
 @click.pass_context
 def rbp(ctx):
-    """Output RBP interactions for identified circRNAs."""
+    """Retrieve RBP interactions for identified circRNAs."""
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config")
@@ -229,7 +260,7 @@ def run_annotation(lookup_dict=None, **kwargs):
 
 
 def run_fasta(lookup_dict=None, **kwargs):
-    """Generate FASTA output from circRNA sequences.
+    """Retrieve circRNA sequences in FASTA format.
     
     Args:
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
@@ -268,7 +299,7 @@ def run_fasta(lookup_dict=None, **kwargs):
 
 
 def run_mirna(lookup_dict=None, **kwargs):
-    """Output miRNA interactions for identified circRNAs.
+    """Retrieve miRNA interactions for identified circRNAs.
 
     Args:
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.
@@ -296,7 +327,7 @@ def run_mirna(lookup_dict=None, **kwargs):
 
 
 def run_rbp(lookup_dict=None, **kwargs):
-    """Output RBP interactions for identified circRNAs.
+    """Retrieve RBP interactions for identified circRNAs.
 
     Args:
         lookup_dict: Optional pre-computed lookup results. If None, will be generated from scratch.

@@ -35,7 +35,7 @@ def fetch_lookup_tables(tmp_dir_path: str = "tmp", verbose: int = 1) -> Dict[str
     os.makedirs(local_dir, exist_ok=True)
     
     if verbose >= 1:
-        console.print(Text(f"Checking for lookup tables in {local_dir}...", style="bold green"))
+        console.print(Text(f"Checking for lookup tables in {local_dir}...", style="bold white"))
     
     missing_files = []
     valid_paths = []

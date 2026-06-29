@@ -19,13 +19,13 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["*", "assets", "utils", "utils.*"]
+include = ["assets", "utils", "utils.*"]
 
 [tool.setuptools]
 py-modules = ["main", "config"]
 
 [tool.setuptools.package-data]
-"*" = ["assets/*.csv", "assets/demo/*"]
+assets = ["*.csv", "*.json", "demo/*"]
 
 [project.scripts]
 pycircdb = "main:cli"

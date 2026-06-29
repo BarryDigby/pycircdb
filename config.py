@@ -21,8 +21,7 @@ DEFAULT_CONFIG_DATA = {
     "samples": {
         "sample_1": {
             "file_path": "path/to/sample1.txt",
-            "reference": "hg38",
-            "zero_based": True
+            "reference": "hg38"
         }
     }
 }
@@ -30,10 +29,9 @@ DEFAULT_CONFIG_DATA = {
 class ToolConfig(TypedDict, total=False):
     file_path: List[str]
     reference: Union[str, List[str], None]
-    zero_based: Union[bool, List[bool], None]
     max_tasks: int
 
-REQUIRED_SAMPLE_KEYS = ("file_path", "reference", "zero_based")
+REQUIRED_SAMPLE_KEYS = ("file_path", "reference")
 
 def _validate_samples(samples: dict) -> None:
     """
@@ -114,14 +112,12 @@ def print_config_panel(config: ToolConfig, user_config_path: Optional[str] = Non
     sample_table.add_column("Sample Name", style="bold green")
     sample_table.add_column("File Path", style="yellow")
     sample_table.add_column("Ref", style="cyan", justify="center")
-    sample_table.add_column("0-based", style="magenta", justify="center")
 
     for sample_name, sample_info in config.get("samples", {}).items():
         sample_table.add_row(
             sample_name,
             str(sample_info.get("file_path", "")),
-            str(sample_info.get("reference", "")),
-            str(sample_info.get("zero_based", ""))
+            str(sample_info.get("reference", ""))
         )
 
     db_table = Table(show_header=True, header_style="bold yellow", box=box.ROUNDED, expand=True)

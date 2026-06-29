@@ -42,13 +42,11 @@ To run ``pycircdb`` on your own data, you will need to create a configuration fi
       "samples": {
          "sample_one": {
                "file_path": "path/to/sample1.txt",
-               "reference": "hg19",
-               "zero_based": true
+               "reference": "hg19"
          },
          "sample_two": {
                "file_path": "path/to/sample2.txt",
-               "reference": "hg38",
-               "zero_based": false
+               "reference": "hg38"
          }
       }
    }
@@ -99,15 +97,15 @@ minimal example:
        "samples": {
            "ci_test_sample": {
                "file_path": "test/tester.txt",
-               "reference": "hg19",
-               "zero_based": true
+               "reference": "hg19"
            }
        }
    }
 
 The ``samples`` dictionary is required. Each sample points to a file of
-circRNA coordinates and declares its genome ``reference`` (e.g. ``hg19``) and
-whether the coordinates are ``zero_based``.
+circRNA coordinates and declares its genome ``reference`` (e.g. ``hg19``).
+Coordinates are matched tolerantly, so the coordinate system (0- or 1-based)
+and strand do not need to be declared.
 
 Commands
 --------
