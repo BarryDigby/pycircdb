@@ -31,11 +31,7 @@ Sample Parameters
 
 ``reference``
     The reference genome used to perform circRNA quantification.
-
-Coordinate inputs are matched tolerantly: strand is honoured when supplied and
-ignored when absent, and each start coordinate is matched as-is as well as
-+/-1 to absorb 0-based vs 1-based differences. You therefore do not need to
-declare the coordinate system of your input.
+    
 
 Please note that all of the sample parameters are required for each sample. If any of these parameters are missing, pycircdb will raise an error and exit.
 

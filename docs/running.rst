@@ -14,7 +14,7 @@ Multiple commands can be specified in a single invokation, for example:
 
 .. code-block:: bash
 
-    pycircdb -c config.json annotate -d 'circbase' fasta -d 'CSCD'
+    pycircdb -c config.json annotate -d 'circbase' fasta -d 'cscd'
 
 
 pycircdb Options

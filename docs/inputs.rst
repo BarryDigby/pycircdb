@@ -13,14 +13,15 @@ pycircdb requires a 1-column text file with circRNAs in the following format:
     chr3:5000-6000|-
 
 
-Strand information is optional.
+Strand information is optional. Coordinate inputs are matched tolerantly: strand is honoured when supplied and ignored when absent, and each start coordinate is matched as-is as well as
++/-1 to absorb 0-based vs 1-based differences. You therefore do not need to declare the coordinate system of your input (0-based vs 1-based) - pycircdb will match your inputs to the database coordinates regardless of the coordinate system used.
 
 Quantification Tool Cheatsheet
 -----------------------------
 
-It is worthwhile noting that different quantification tools report circRNAs as zero-based or one-based coordinates.
+It is worthwhile noting that different quantification tools report circRNAs as 0-based or 1-based coordinates.
 
-The following table will help reconcile your inputs vs. the outputs of pycircdb:
+pycircdb is 0-based. The following table may help reconcile your inputs vs. the outputs of pycircdb:
 
 .. list-table::
    :header-rows: 1
@@ -52,11 +53,6 @@ The following table will help reconcile your inputs vs. the outputs of pycircdb:
      - 1-based
    * - Segemehl
      - 0-based
-
-
-.. note::
-
-    Whilst pycircdb performs a fuzzy search of the input coordinates against databases, the output of pycircdb is zero-based.
 
 
 .. caution::

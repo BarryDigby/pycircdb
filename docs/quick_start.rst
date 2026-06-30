@@ -44,7 +44,7 @@ To try pycircdb on example data, run the following command to create some exampl
 
 You should now have a folder called `test/` and a file called `test_config.json` in your cwd. The `test/` folder contains example input data and the `test_config.json` file contains a configuration for running pycircdb on this data.
 
-The command `pycircdb init-demo` will suggest a command to run, feel free to alter this command but be aware that there are only three circRNAs in the example data - some databases will not return a hit. 
+The command `pycircdb init-demo` will suggest a command to run, feel free to alter this command to view different outputs.
 
 .. code-block:: bash
 
@@ -55,14 +55,17 @@ The demo will create the following output directory structure:
 
 .. code-block:: bash
 
-    results/
     └── demo
-       └── demo_sample
-          ├── arraystar.fasta
-          ├── arraystar_hits.txt
-          ├── circbase.fasta
-          ├── circbase_hits.txt
-          ├── hg38_chr1_mirna_hits.txt.gz
-          └── hg38_chr1_rbp_hits.txt.gz
+        └── demo_sample
+            ├── arraystar.fasta
+            ├── arraystar_hits.txt
+            ├── circbase.fasta
+            ├── circbase_hits.txt
+            ├── hg38_chr10_mirna_hits.txt.gz
+            ├── hg38_chr10_rbp_hits.txt.gz
+            ├── hg38_chr13_mirna_hits.txt.gz
+            ├── hg38_chr13_rbp_hits.txt.gz
+            ├── hg38_chr19_mirna_hits.txt.gz
+            └── hg38_chr19_rbp_hits.txt.gz
 
-   2 directories, 6 files
+    2 directories, 10 files
