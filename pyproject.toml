@@ -1,6 +1,6 @@
 [project]
 name = "pycircdb"
-version = "0.1.3"
+version = "0.1.4"
 description = "pycircdb: integrated circRNA database annotation for computational workflows."
 readme = "README.md"
 authors = [{ name = "Barry Digby", email = "b.digby237@gmail.com" }]
