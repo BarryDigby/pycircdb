@@ -250,10 +250,10 @@ CSCD
 
 .. code-block:: text
 
-  hg38                            hg19                                circbase_id             type            position        host_gene   read_counts   algorithm                               subcellular_location                                                gene_type   alternative_splicing    ratios                  works_cited mioncocirc  number_of_algorithm
-  chr1:100906851-100921841|+      chr1:101372407-101387397|+          hsa_circ_0000098        normal,cancer   Exon,Intron     SLC30A7     SEE_BELOW     circRNA_finder,CIRI,find_circ,circexplorer2   nucleoplasmic,chromatin,cytosolic,nuclear,membrane,insoluble_cytoplasmic,---    mRNA        2.6555742392819877     Marcel_2019     Mioncocirc      4
-  chr1:108699570-108699721|+      chr1:109242192-109242343|+                                  normal,cancer   Exon            PRPF38B     SEE_BELOW     circRNA_finder,find_circ                    mRNA                                                                    mRNA        1.1759135216283247                         2
-  chr1:100424221-100442996|+      chr1-100889777-100908552|+          hsa_circ_0000097        normal,cancer   Exon,Intron     CDC14A      SEE_BELOW     circRNA_finder,CIRI,find_circ,circexplorer2   nucleoplasmic,nucleolus,chromatin,cytosolic,nuclear,membrane,               mRNA        100436132:100436242,ES;100436132:100436242,ES;     2.638903221546935       Marcel_2019     Mioncocirc      4
+  hg38                            hg19                                circbase_id             type            position        host_gene   read_counts   algorithm                                     subcellular_location                                                             gene_type   alternative_splicing    ratios          works_cited    mioncocirc      number_of_algorithm
+  chr1:100906851-100921841|+      chr1:101372407-101387397|+          hsa_circ_0000098        normal,cancer   Exon,Intron     SLC30A7     SEE_BELOW     circRNA_finder,CIRI,find_circ,circexplorer2   nucleoplasmic,chromatin,cytosolic,nuclear,membrane,insoluble_cytoplasmic,---     mRNA        SEE_BELOW               3.2727267736    Marcel_2019    Mioncocirc      4
+  chr1:108699570-108699721|+      chr1:109242192-109242343|+                                  normal,cancer   Exon            PRPF38B     SEE_BELOW     circRNA_finder,find_circ                      nucleoplasmic,nucleolus,chromatin,                                               mRNA        SEE_BELOW               1.1759283247                                   2
+  chr1:100424221-100442996|+      chr1-100889777-100908552|+          hsa_circ_0000097        normal,cancer   Exon,Intron     CDC14A      SEE_BELOW     circRNA_finder,CIRI,find_circ,circexplorer2   nucleoplasmic,nucleolus,chromatin,cytosolic,nuclear,membrane,                    mRNA        SEE_BELOW               2.6381546935    Marcel_2019    Mioncocirc      4
 
 .. list-table::
    :header-rows: 1
@@ -426,11 +426,11 @@ miRNA output are a combination of CircNET and CSCD - for this reason, not all Ta
 
 .. code-block:: text
 
-    circRNA                 miRNA                       MSA_start   MSA_end Site_type   Score   Energy  Algorithm
-    chr15:100048856-100054054   miR-1208                30.0        37.0    8mer-1a     144.0   -13.62  miRanda,TargetScan
-    chr15:100048856-100054054   miR-1237-5p/4488/4697-5p                            140.0   -20.01  miRanda
-    chr15:100048856-100054054   miR-1289                                            141.0   -22.95  miRanda
-    chr15:100048856-100054054   miR-141-5p              39.0        45.0    7mer-m8     178.0   -26.76  miRanda,TargetScan
+    circRNA                     miRNA                  MSA_start  MSA_end  Site_type  Score   Energy  Algorithm
+    chr15:100048856-100054054   miR-1208               30.0       37.0     8mer-1a    144.0   -13.62  miRanda,TargetScan
+    chr15:100048856-100054054   miR-1237-5p/4488-5p                                   140.0   -20.01  miRanda
+    chr15:100048856-100054054   miR-1289                                              141.0   -22.95  miRanda
+    chr15:100048856-100054054   miR-141-5p             39.0       45.0     7mer-m8    178.0   -26.76  miRanda,TargetScan
 
 .. list-table::
    :header-rows: 1
