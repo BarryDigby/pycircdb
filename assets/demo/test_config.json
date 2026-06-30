@@ -6,7 +6,7 @@
     "samples": {
         "demo_sample": {
             "file_path": "test/tester.txt",
-            "reference": "hg19"
+            "reference": "hg38"
         }
     }
 }

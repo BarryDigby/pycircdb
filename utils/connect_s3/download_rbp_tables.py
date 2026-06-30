@@ -11,43 +11,38 @@ from utils.md5sum_check import _load_expected_sums, _file_md5sum
 
 console = Console(stderr=True, highlight=False)
 
-def _extract_cscd_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]) -> List[str]:
-    """Collect required CSCD chromosome names from lookup hits."""
-    cscd_chrs = set()
+def _extract_required_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFrame]]) -> List[str]:
+    """Collect required hg38 chromosome names from hits across all lookup tables.
 
-    for _, db_dict in lookup_results.items():
-        cscd_hits = db_dict.get("cscd")
-        if cscd_hits is None or cscd_hits.shape == (0, 0):
-            continue
-        if "hg19" not in cscd_hits.columns or "hg38" not in cscd_hits.columns:
-            continue
+    RBP hits are matched against the hg38 IDs of every database hit (see
+    broadcast_rbp), so the chromosome tables we download must be derived from
+    all lookup tables, not just CSCD.
+    """
+    chroms = set()
 
-        cscd_hits = cscd_hits.with_columns(
-            pl.col("hg19")
-            .str.splitn(":", 2)
-            .struct.rename_fields(["19chroms", "19rest"])
-            .alias("hg19_fields")
-        ).unnest("hg19_fields")
+    for db_dict in lookup_results.values():
+        for pl_hits in db_dict.values():
+            if pl_hits is None or pl_hits.is_empty():
+                continue
+            if "hg38" not in pl_hits.columns:
+                continue
 
-        cscd_hits = cscd_hits.with_columns(
-            pl.col("hg38")
-            .str.splitn(":", 2)
-            .struct.rename_fields(["38chroms", "38rest"])
-            .alias("hg38_fields")
-        ).unnest("hg38_fields")
+            chrom_series = (
+                pl_hits["hg38"]
+                .str.split("|").list.first()   # drop optional strand suffix
+                .str.split(":").list.first()   # chromosome is the leading field
+            )
+            chroms.update(chrom_series.unique().to_list())
 
-        cscd_chrs.update(cscd_hits["38chroms"].unique().to_list())
-        cscd_chrs.update(cscd_hits["19chroms"].unique().to_list())
-
-    cscd_chrs -= {None}
-    return sorted(cscd_chrs)
+    chroms -= {None}
+    return sorted(chroms)
 
 def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp", verbose: int = 1) -> List[str]:
     """
     Download (or return cached) RBP chromosome parquet files based on lookup results.
     """
-    cscd_chrs = _extract_cscd_chromosomes(lookup_results)
-    rbp_files = [f"hg38_rbp_{chrom}.parquet" for chrom in cscd_chrs]
+    required_chrs = _extract_required_chromosomes(lookup_results)
+    rbp_files = [f"hg38_rbp_{chrom}.parquet" for chrom in required_chrs]
 
     from pathlib import Path
     assets_dir = Path(__file__).resolve().parent.parent.parent / "assets"
