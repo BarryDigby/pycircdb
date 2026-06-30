@@ -96,15 +96,15 @@ Circbank
    * - splicedLength
      - Length of the spliced circRNA.
    * - Assembly
-      - Reference genome assembly used by circbank.
+     - Reference genome assembly used by circbank.
    * - geneID
-      - Ensembl gene version ID of the overlapping gene for the circRNA.
+     - Ensembl gene version ID of the overlapping gene for the circRNA.
    * - geneSymbol
-      - Gene symbol of the overlapping gene for the circRNA.
+     - Gene symbol of the overlapping gene for the circRNA.
    * - bestTranscriptID
-      - Ensembl transcript version ID from which the circRNA likely originates.
+     - Ensembl transcript version ID from which the circRNA likely originates.
    * - Biotype
-      - Biotype of the best transcript. Null if the circRNA is intergenic.
+     - Biotype of the best transcript. Null if the circRNA is intergenic.
 
  
 
@@ -127,33 +127,33 @@ circBase
 
    * - Column Name
      - Description
-    * - circbase
+   * - circbase
      - The circBase circRNA ID.
-    * - hg19
+   * - hg19
      - The circRNA coordinates in the hg19 reference genome.
-    * - hg38
+   * - hg38
      - The circRNA coordinates in the hg38 reference genome.
-    * - chrom
+   * - chrom
      - Chromosome of the circRNA.
-    * - chromStart
+   * - chromStart
      - Start coordinate of the circRNA.
-    * - chromEnd
+   * - chromEnd
      - End coordinate of the circRNA.
-    * - score
+   * - score
      - Score of the circRNA (not used).
-    * - strand
+   * - strand
      - Strand of the circRNA.
-    * - thickStart
+   * - thickStart
      - Start coordinate of the circRNA (same as chromStart).
-    * - thickEnd
+   * - thickEnd
      - End coordinate of the circRNA (same as chromEnd).
-    * - itemRGB
+   * - itemRGB
      - RGB color code for the circRNA (not used).
-    * - blockCount
+   * - blockCount
      - Number of exons in the circRNA.
-    * - blockSizes
+   * - blockSizes
      - Comma separated list of exon sizes for the circRNA.
-    * - blockStarts
+   * - blockStarts
      - Comma separated list of exon start coordinates relative to chromStart for the circRNA.
 
 
