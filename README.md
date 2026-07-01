@@ -91,7 +91,7 @@ Please see the [documentation](https://pycircdb.readthedocs.io/en/latest/) for a
 ```json
 {
   "global_parameters": {
-    "max_tasks": 4,
+    "max_tasks": 1,
     "output_dir": "results/",
     "tmp_dir": "tmp/"
   },

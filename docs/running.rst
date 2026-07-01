@@ -1,4 +1,4 @@
-Invokation
+Invocation
 ===========
 
 When running pycircdb on the command line, the order of the commands is important. The general syntax is:

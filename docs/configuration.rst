@@ -9,7 +9,12 @@ Global Parameters
 ^^^^^^^^^^^^^^^^^
 
 ``max_tasks``
-    Maximum number of tasks to run in parallel. If not specified, the default is 1.
+    Maximum number of tasks to run in parallel. Defaults to ``1``, and there is
+    little reason to change it. pycircdb is I/O-bound (dominated by
+    downloading database tables and writing results rather than computation),
+    so raising ``max_tasks`` yields little speed-up while increasing peak memory
+    use, since each concurrent task holds its own table in memory. Leave it at
+    ``1`` unless you have a specific reason to trade memory for parallelism.
     
 ``output_dir``
    Path to the output directory. If it does not exist, it will be created. Defaults to ``./results``.
@@ -42,7 +47,7 @@ Example Configuration File
 
     {
         "global_parameters": {
-            "max_tasks": 4,
+            "max_tasks": 1,
             "output_dir": "results/",
             "tmp_dir": "tmp/"
         },
