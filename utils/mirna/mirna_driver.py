@@ -30,20 +30,36 @@ def broadcast_mirna(
     for sample_name, lookup_hits in lookup_dict.items():
         # Combine all hg38 IDs for this sample across all databases
         hg38_series = []
+        # Map strand-stripped hg38 key -> full (stranded) hg38 coordinate,
+        # so strand can be restored on the output after the strand-less match.
+        strand_frames = []
         for db_name, pl_hits in lookup_hits.items():
-            if not pl_hits.is_empty() and "hg38" in pl_hits.columns:
-                hg38_series.append(pl_hits["hg38"].str.split("|").list.first())
-                
+            if pl_hits.is_empty() or "hg38" not in pl_hits.columns:
+                continue
+            hg38_series.append(pl_hits["hg38"].str.split("|").list.first())
+            strand_frames.append(pl_hits.select(
+                pl.col("hg38").str.split("|").list.first().alias("_hg38_key"),
+                pl.col("hg38").alias("circRNA"),
+            ))
+
         if not hg38_series:
             continue
-            
+
         unique_hg38_ids = pl.concat(hg38_series).unique().to_list()
+
+        # Prefer stranded coordinates when de-duplicating the strand-less key.
+        strand_map = (
+            pl.concat(strand_frames)
+            .sort("circRNA")
+            .unique(subset="_hg38_key", keep="last")
+        )
 
         for chromosome_mirna_path in mirna_tables:
             yield {
                 "sample_name": sample_name,
                 "output_dir": config['global_parameters'].get("output_dir"),
                 "unique_hg38_ids": unique_hg38_ids,
+                "strand_map": strand_map,
                 "mirna_table": chromosome_mirna_path,
                 "mirna_algorithms": config.get("mirna_algorithms"),
                 "verbose": config.get("verbose", 1)
@@ -57,6 +73,7 @@ def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
     output_dir = broadcast_mirna["output_dir"]
     sample_name = broadcast_mirna["sample_name"]
     unique_hg38_ids = broadcast_mirna["unique_hg38_ids"]
+    strand_map = broadcast_mirna.get("strand_map")
     mirna_table = broadcast_mirna["mirna_table"]
     mirna_algorithms = broadcast_mirna.get("mirna_algorithms")
     verbose = broadcast_mirna.get("verbose", 1)
@@ -78,6 +95,18 @@ def mirna_hits(broadcast_mirna: miRNABroadcast) -> None:
     df = query.collect(engine="streaming")
     
     if not df.is_empty():
+        # The miRNA table's circRNA column is the strand-stripped hg38 key.
+        # Join back to restore the strand onto the circRNA coordinate.
+        if strand_map is not None and strand_map.height > 0:
+            df = (
+                df.rename({"circRNA": "_hg38_key"})
+                .join(strand_map, on="_hg38_key", how="left")
+                # Fall back to the strand-less key if a coordinate is unmapped.
+                .with_columns(pl.col("circRNA").fill_null(pl.col("_hg38_key")))
+            )
+            ordered = ["circRNA"] + [c for c in df.columns if c not in ("circRNA", "_hg38_key")]
+            df = df.select(ordered)
+
         p = Path(output_dir)
         if p.is_absolute():
             output_path = p / f"{sample_name}/hg38_{chromosome}_mirna_hits.txt.gz"

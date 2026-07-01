@@ -1,0 +1,66 @@
+name: Release Stress Test
+
+# Runs only when a new release is published (i.e. after you tag + publish a
+# GitHub Release). Exercises the full pipeline (all databases, all miRNA
+# algorithms) against test/stress.txt on a single Linux runner, reporting
+# wall-clock time, peak memory and disk usage so regressions in resource use
+# are caught before/at release time.
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  stress-test:
+    name: Full-pipeline stress test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.14"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          # Use the released tag when triggered by a release; otherwise the
+          # ref the workflow was dispatched from.
+          ref: ${{ github.event.release.tag_name || github.ref }}
+
+      - name: Report runner resources
+        run: |
+          echo "CPUs: $(nproc)"
+          free -h
+          df -h /
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync
+
+      - name: Run full pipeline (timed, peak memory)
+        run: |
+          /usr/bin/time -v uv run main.py -c test/stress_config.json -v 2 \
+            annotate fasta mirna rbp
+
+      - name: Summarise outputs and disk usage
+        if: always()
+        run: |
+          echo "=== output files ==="
+          find results -type f | sort
+          echo "=== output size ==="
+          du -sh results 2>/dev/null || true
+          echo "=== downloaded tables size ==="
+          du -sh tmp/ 2>/dev/null || true
+          echo "=== disk after run ==="
+          df -h /

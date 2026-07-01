@@ -34,7 +34,8 @@ def _extract_required_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFra
             )
             chroms.update(chrom_series.unique().to_list())
 
-    chroms -= {None}
+    # chrM has no hg38_mirna_chrM.parquet on S3 (absent from the md5sum manifest).
+    chroms -= {None, "chrM"}
     return sorted(chroms)
 
 def fetch_mirna_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp", verbose: int = 1) -> List[str]:

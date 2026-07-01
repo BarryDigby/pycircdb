@@ -1,0 +1,13 @@
+{
+    "global_parameters": {
+        "max_tasks": 4,
+        "output_dir": "results/stress/",
+        "tmp_dir": "tmp"
+    },
+    "samples": {
+        "stress_sample": {
+            "file_path": "test/vromann.txt",
+            "reference": "hg38"
+        }
+    }
+}
