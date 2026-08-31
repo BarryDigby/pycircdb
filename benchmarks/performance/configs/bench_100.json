@@ -1,0 +1,13 @@
+{
+    "global_parameters": {
+        "max_tasks": 1,
+        "output_dir": "benchmarks/performance/results/bench_100",
+        "tmp_dir": "tmp"
+    },
+    "samples": {
+        "bench_100": {
+            "file_path": "benchmarks/performance/inputs/bench_100.txt",
+            "reference": "hg19"
+        }
+    }
+}
