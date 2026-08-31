@@ -5,7 +5,7 @@ Execution Report
 -----------------
 
 After all selected modules complete, pycircdb writes a plain-text execution report to the output directory.
-The file is named ``execution_report_<YYYY-MM-DD_HH-MM-SS>.txt``.
+The file is named ``execution_report_<YYYY-mm-dd_HH-MM-SS>.txt``.
 
 The report is divided into the following sections:
 
@@ -149,7 +149,7 @@ Arraystar
      - Gene symbol of the overlapping gene for the circRNA. Null if the circRNA is intergenic.
 
 
-CircAtlas
+circAtlas
 ^^^^^^^^^
 
 Please note that circatlas annotations are not readily available publicly. For this reason, mapping keys between circatlas, hg19 and hg38 are provided as outputs:
@@ -162,7 +162,7 @@ Please note that circatlas annotations are not readily available publicly. For t
     hsa-RERE_0008   chr1:8555122-8674745|-  chr1:8495062-8614686|-
 
 
-Circbank
+circBank
 ^^^^^^^^
 
 .. code-block:: text
@@ -463,7 +463,7 @@ We recommend extracting the hg38/hg19 column and the read counts column into a l
 
 In this way, you can choose to generate a circRNA count matrix for common samples across algorithms by averaging their counts.
 
-exoRbase
+exoRBase
 ^^^^^^^^
 
 FASTA
@@ -479,7 +479,7 @@ Arraystar
   >ASCRP3010903
   TAGTTGTAAGCTTAGGCTTGATTTCCGACTCTTTTCACATGTTTTTCGATAGCACTGCCA
 
-Circbank
+circBank
 ^^^^^^^^
 
 .. code-block:: text

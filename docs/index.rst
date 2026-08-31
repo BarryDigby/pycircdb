@@ -1,7 +1,7 @@
 pycircdb overview
 =================
 
-pycircdb is a command-line tool for annotating circRNAs using publicly available databases. Whilst it is designed to be incorporated into larger pipelines after performing circRNA quantification, pycircdb can also be used as a post-hoc tool to query circRNAs.
+pycircdb is a command-line tool for annotating circRNAs using publicly available databases. Whilst primarily designed to be incorporated into larger pipelines to annotate circRNA quantification results, pycircdb can also be used as a post-hoc tool to query circRNAs.
 
 .. image:: https://github.com/BarryDigby/pycircdb/raw/main/assets/pycircdb.png
    :alt: pycircdb
@@ -11,7 +11,7 @@ pycircdb is a command-line tool for annotating circRNAs using publicly available
 
 .. note::
 
-   pycircdb does not perform circRNA quantification - it just annotates the results from quantification tools.
+   pycircdb does not perform circRNA quantification - it only annotates the results from quantification tools.
 
 A stable internet connection is required to download database files however, once downloaded, pycircdb will use the cached files for subsequent runs. 
 
