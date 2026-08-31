@@ -6,6 +6,7 @@ on:
     paths:
       - 'docs/**'
       - '.readthedocs.yaml'
+  workflow_dispatch:
 
 jobs:
   trigger-rtd:
