@@ -7,7 +7,7 @@ from botocore.config import Config
 from rich.console import Console
 from rich.text import Text
 
-from utils.md5sum_check import _load_expected_sums, _file_md5sum
+from utils.md5sum_check import _load_expected_sums, _file_md5sum, _get_db_prefix
 
 console = Console(stderr=True, highlight=False)
 
@@ -68,7 +68,8 @@ def _download_required_files(
     for filename in other_files:
         if verbose >= 2:
             console.print(f"  Downloading {filename}", style="cyan")
-        object_key = f"sequence_tables/{filename}"
+        db_prefix = _get_db_prefix()
+        object_key = f"{db_prefix}/sequence_tables/{filename}"
         local_path = os.path.join(local_dir, filename)
         
         try:
@@ -80,7 +81,8 @@ def _download_required_files(
     for cscd_filename in cscd_files:
         if verbose >= 2:
             console.print(f"  Downloading {cscd_filename}", style="cyan")
-        object_key = f"sequence_tables/{cscd_filename}"
+        db_prefix = _get_db_prefix()
+        object_key = f"{db_prefix}/sequence_tables/{cscd_filename}"
         local_path = os.path.join(local_dir, cscd_filename)
 
         try:
@@ -109,7 +111,7 @@ def fetch_sequence_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tm
         'circbank_sequence.parquet',
         'circbase_sequence.parquet',
         'circpedia_sequence.parquet',
-        'circRNA_DB_sequence.parquet'
+        'circRNADb_sequence.parquet'
     ]
     
     other_files = [f for f in all_possible_other if f.replace("_sequence.parquet", "").lower() in active_dbs]

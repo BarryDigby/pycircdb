@@ -6,7 +6,7 @@ from botocore.config import Config
 from rich.console import Console
 from rich.text import Text
 
-from utils.md5sum_check import _load_expected_sums, _file_md5sum
+from utils.md5sum_check import _load_expected_sums, _file_md5sum, _get_db_prefix
 
 console = Console(stderr=True, highlight=False)
 
@@ -21,7 +21,7 @@ def fetch_lookup_tables(tmp_dir_path: str = "tmp", verbose: int = 1) -> Dict[str
         "circbank_lookup.parquet",
         "circbase_lookup.parquet",
         "circpedia_lookup.parquet",
-        "circRNA_DB_lookup.parquet",
+        "circRNADb_lookup.parquet",
         "cscd_lookup.parquet",
         "exorbase_lookup.parquet"
     ]
@@ -61,7 +61,8 @@ def fetch_lookup_tables(tmp_dir_path: str = "tmp", verbose: int = 1) -> Dict[str
         for filename in missing_files:
             if verbose >= 2:
                 console.print(f"  Downloading {filename}", style="cyan")
-            object_key = f"lookup_tables/{filename}"
+            db_prefix = _get_db_prefix()
+            object_key = f"{db_prefix}/lookup_tables/{filename}"
             local_path = os.path.join(local_dir, filename)
             
             try:

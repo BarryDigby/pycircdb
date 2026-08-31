@@ -121,7 +121,7 @@ Annotate circRNAs using the configured databases.
 
 ``-d, --database``
    Comma-separated list of databases to use. Valid options: ``arraystar``,
-   ``circatlas``, ``circbank``, ``circbase``, ``circpedia``, ``circrna_db``,
+   ``circatlas``, ``circbank``, ``circbase``, ``circpedia``, ``circrnadb``,
    ``cscd``, ``exorbase``.
 
 fasta
@@ -135,7 +135,7 @@ Output circRNA sequences in FASTA format.
 
 ``-d, --database``
    Comma-separated list of databases to use. Valid options: ``arraystar``,
-   ``circatlas``, ``circbank``, ``circbase``, ``circpedia``, ``circrna_db``,
+   ``circatlas``, ``circbank``, ``circbase``, ``circpedia``, ``circrnadb``,
    ``cscd``.
 
 mirna

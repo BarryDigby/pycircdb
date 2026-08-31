@@ -72,7 +72,7 @@ Command-level Options
 ``annotate``
     ``-d, --database``
         Comma-separated list of databases to use for annotation. Options are
-        ``arraystar``, ``circatlas``, ``circbank``, ``circbase``, ``circpedia``, ``circRNA_DB``, ``CSCD``, ``exorbase``.
+        ``arraystar``, ``circatlas``, ``circbank``, ``circbase``, ``circpedia``, ``circRNADb``, ``CSCD``, ``exorbase``.
         Not specifiying a database will result in all databases being used.
     ``-h, --help``
         Show this help message and exit.
@@ -80,7 +80,7 @@ Command-level Options
 ``fasta``
     ``-d, --database``
         Comma-separated list of databases to use for sequence extraction. Options are
-        ``arraystar``, ``circbank``, ``circbase``, ``circpedia``, ``circRNA_DB``, ``CSCD``.
+        ``arraystar``, ``circbank``, ``circbase``, ``circpedia``, ``circRNADb``, ``CSCD``.
         Not specifiying a database will result in all databases being used.
     ``-h, --help``
         Show this help message and exit.

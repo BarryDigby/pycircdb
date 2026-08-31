@@ -7,7 +7,7 @@ from typing import List, Dict
 from rich.console import Console
 from rich.text import Text
 
-from utils.md5sum_check import _load_expected_sums, _file_md5sum
+from utils.md5sum_check import _load_expected_sums, _file_md5sum, _get_db_prefix
 
 console = Console(stderr=True, highlight=False)
 
@@ -35,7 +35,8 @@ def _extract_required_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFra
             chroms.update(chrom_series.unique().to_list())
 
     # chrM has no hg38_mirna_chrM.parquet on S3 (absent from the md5sum manifest).
-    chroms -= {None, "chrM"}
+    # Polars 1.x .str.split() on null can yield whitespace rather than null.
+    chroms = {c for c in chroms if c and str(c).strip() and c != "chrM"}
     return sorted(chroms)
 
 def fetch_mirna_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp", verbose: int = 1) -> List[str]:
@@ -80,7 +81,8 @@ def fetch_mirna_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_d
         for filename in missing_files:
             if verbose >= 2:
                 console.print(f"  Downloading {filename}", style="cyan")
-            object_key = f"miRNA/{filename}"
+            db_prefix = _get_db_prefix()
+            object_key = f"{db_prefix}/miRNA/{filename}"
             local_path = os.path.join(local_dir, filename)
             
             try:

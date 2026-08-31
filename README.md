@@ -6,7 +6,7 @@
 </h1>
 
 ##### Explore the [documentation](https://pycircdb.readthedocs.io/en/latest/) to get up and running!
-
+![Database Version](https://img.shields.io/badge/database-v1.0-blue)
 [![PyPI Version](https://img.shields.io/pypi/v/pycircdb)](https://pypi.python.org/pypi/pycircdb/)
 [![DOI](https://img.shields.io/badge/DOI-pending-red.svg)](#)
 

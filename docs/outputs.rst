@@ -1,6 +1,107 @@
 Outputs
 ========
 
+Execution Report
+-----------------
+
+After all selected modules complete, pycircdb writes a plain-text execution report to the output directory.
+The file is named ``execution_report_<YYYY-MM-DD_HH-MM-SS>.txt``.
+
+The report is divided into the following sections:
+
+**Header** — records the run timestamp, pycircdb version, database bundle version, and the path to the config file used.
+
+**Global Parameters** — echoes the ``global_parameters`` block from the config (e.g. ``output_dir``, ``tmp_dir``, ``max_tasks``).
+
+**Samples** — lists each sample name together with its input file path and reference genome.
+
+**Databases & Algorithms** — summarises which annotation databases, FASTA databases, and miRNA prediction algorithms were selected for the run.
+
+**Database Provenance** — for every module that was executed, lists the source database(s) with their native reference genome build, version number, and the date the data were accessed. miRNA results are always drawn from CircNet and CSCD; RBP results are always drawn from CSCD.
+
+**Mapping Statistics** — reports the fraction of input circRNAs that returned at least one hit in each database or chromosome partition, expressed as ``[hits / input] percentage``.
+
+An example report is shown below:
+
+.. code-block:: text
+
+    pycircdb execution report
+    ========================================
+    Timestamp        : 2026-08-20 21:12:21
+    pycircdb version : 0.1.5
+    Database version : 1.0
+    Config file      : /path/to/config.json
+
+    Global Parameters
+    --------------------
+      output_dir: results/my_sample
+      tmp_dir: tmp
+      max_tasks: 4
+
+    Samples
+    --------------------
+      my_sample:
+        file_path : inputs/circrnas.txt
+        reference : hg19
+
+    Databases & Algorithms
+    --------------------
+      Annotation databases : arraystar, circatlas, circbank, circbase, circpedia, circrnadb, cscd, exorbase
+      FASTA databases      : arraystar, circbank, circbase, circpedia, circrnadb, cscd
+      miRNA algorithms     : miRanda, PITA, TargetScan
+
+    Database Provenance
+    --------------------
+      Annotation
+        arraystar     : hg19, version 2.0, accessed January 2025
+        circatlas     : hg38, version 3.0, accessed January 2026
+        circbank      : hg19, version 1.0, accessed January 2026
+        circbase      : hg19, version 1.0, accessed January 2026
+        circpedia     : hg38, version 3.0, accessed October 2025
+        circrnadb     : hg19, version 1.0, accessed March 2026
+        cscd          : hg38, version 2.0, accessed January 2026
+        exorbase      : hg38, version 1.0, accessed May 2026
+      FASTA
+        arraystar     : hg19, version 2.0, accessed January 2025
+        circbank      : hg19, version 1.0, accessed January 2026
+        circbase      : hg19, version 1.0, accessed January 2026
+        circpedia     : hg38, version 3.0, accessed October 2025
+        circrnadb     : hg19, version 1.0, accessed March 2026
+        cscd          : hg38, version 2.0, accessed January 2026
+      miRNA
+        circnet       : hg19, version 2.0, accessed January 2026
+        cscd          : hg38, version 2.0, accessed January 2026
+      RBP
+        cscd          : hg38, version 2.0, accessed January 2026
+
+    Mapping Statistics
+    ------------------------------
+      -- Annotation
+           arraystar          [33/100] 33.0%
+           circatlas          [94/100] 94.0%
+           circbank           [95/100] 95.0%
+           circbase           [49/100] 49.0%
+           circpedia          [84/100] 84.0%
+           circrnadb          [52/100] 52.0%
+           cscd               [95/100] 95.0%
+           exorbase           [77/100] 77.0%
+      -- FASTA
+           arraystar          [33/100] 33.0%
+           circbank           [95/100] 95.0%
+           circbase           [49/100] 49.0%
+           circpedia          [84/100] 84.0%
+           circrnadb          [52/100] 52.0%
+           cscd               [95/100] 95.0%
+      -- miRNA
+           chr1               [12/100] 12.0%
+           chr2               [7/100] 7.0%
+           ...
+      -- RBP
+           chr1               [12/100] 12.0%
+           chr2               [7/100] 7.0%
+           ...
+
+
 Annotation
 -----------
 
@@ -209,7 +310,7 @@ circRNADb
 
 .. code-block:: text
 
-  circRNA_DB      hg19    hg38    gene_symbol     genomic_length  transcript_id   spliced_length  exon_number     exon_sizes      exon_offsets    samples pubmed_id
+  circRNADb       hg19    hg38    gene_symbol     genomic_length  transcript_id   spliced_length  exon_number     exon_sizes      exon_offsets    samples pubmed_id
   hsa_circ_00089  chr13:42385360-42393522|-       chr13:41811224-41819386|-       VWA8    8162    NM_001009814    363     3       116,78,169      0,5473,7993     H9 hESCs,normal brain tissue,oligodendroma,Hs68  25242744,26873924,23249747
   hsa_circ_00131  chr16:69189773-69201088|+       chr16:69155870-69167185|+       CIRH1A  11315   NM_032830       780     6       123,157,107,96,186,111  0,1213,4485,7212,9470,11204     H9 hESCs,Hs68,leukemia   25242744,23249747,22319583
   hsa_circ_00164  chr2:20507738-20527139|-        chr2:20307977-20327378|-        PUM2    19401   NM_015317       901     6       94,271,170,188,109,69   0,336,3516,4258,10559,19332     H9 hESCs 25242744
@@ -220,7 +321,7 @@ circRNADb
 
    * - Column Name
      - Description
-   * - circRNA_DB
+   * - circRNADb
      - The circRNADb circRNA ID, not to be confused with circBase IDs.
    * - hg19
      - The circRNA coordinates in the hg19 reference genome.

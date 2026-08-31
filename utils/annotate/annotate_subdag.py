@@ -85,20 +85,20 @@ def annotate__circpedia(
     return {per_sample_annotation.get("sample_name"): {'circpedia': annotated_hits}}
 
 
-@config.when(db_name='circRNA_DB')
-def annotate__circrna_db(
+@config.when(db_name='circRNADb')
+def annotate__circrnadb(
     per_sample_annotation: PerSampleAnnotation
 ) -> AnnotateResult:
     """
-    circRNA_DB, hg19
+    circRNADb, hg19
     """
     lookup_pl = per_sample_annotation.get("lookup_hits")
     annotation_pl = pl.read_parquet(per_sample_annotation.get("annotation_parquet_path"))
-    annotated_hits = annotation_pl.filter(col("circRNA_DB").is_in(lookup_pl['circRNA_DB']))
-    annotated_hits = annotated_hits.join(lookup_pl.select(['circRNA_DB', 'hg38']), on='circRNA_DB', how='left')
-    annotated_hits = annotated_hits.select(['circRNA_DB', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circRNA_DB', 'hg19', 'hg38']])
+    annotated_hits = annotation_pl.filter(col("circRNADb").is_in(lookup_pl['circRNADb']))
+    annotated_hits = annotated_hits.join(lookup_pl.select(['circRNADb', 'hg38']), on='circRNADb', how='left')
+    annotated_hits = annotated_hits.select(['circRNADb', 'hg19', 'hg38'] + [col for col in annotation_pl.columns if col not in ['circRNADb', 'hg19', 'hg38']])
     
-    return {per_sample_annotation.get("sample_name"): {'circRNA_DB': annotated_hits}}
+    return {per_sample_annotation.get("sample_name"): {'circRNADb': annotated_hits}}
 
 
 @config.when(db_name='cscd')

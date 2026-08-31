@@ -7,7 +7,7 @@ from botocore.config import Config
 from rich.console import Console
 from rich.text import Text
 
-from utils.md5sum_check import _load_expected_sums, _file_md5sum
+from utils.md5sum_check import _load_expected_sums, _file_md5sum, _get_db_prefix
 
 console = Console(stderr=True, highlight=False)
 
@@ -70,7 +70,8 @@ def _download_required_files(
     for filename in other_files:
         if verbose >= 2:
             console.print(f"  Downloading {filename}", style="cyan")
-        object_key = f"db_tables/{filename}"
+        db_prefix = _get_db_prefix()
+        object_key = f"{db_prefix}/db_tables/{filename}"
         local_path = os.path.join(local_dir, filename)
         try:
             s3.download_file(bucket, object_key, local_path)
@@ -81,7 +82,8 @@ def _download_required_files(
     for filename in cscd_files:
         if verbose >= 2:
             console.print(f"  Downloading {filename}", style="cyan")
-        object_key = f"CSCD_cleaned/{filename}"
+        db_prefix = _get_db_prefix()
+        object_key = f"{db_prefix}/CSCD_cleaned/{filename}"
         local_path = os.path.join(local_dir, filename)
         try:
             s3.download_file(bucket, object_key, local_path)
@@ -109,7 +111,7 @@ def fetch_annotation_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], 
         'circbank.parquet',
         'circbase.parquet',
         'circpedia.parquet',
-        'circRNA_DB.parquet',
+        'circRNADb.parquet',
         'exorbase.parquet'
     ]
     

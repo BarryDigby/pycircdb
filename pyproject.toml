@@ -9,8 +9,9 @@ dependencies = [
     "apache-hamilton>=1.90.0",
     "boto3>=1.42.89",
     "click>=8.3.2",
+    "matplotlib>=3.10.9",
     "polars>=1.39.3",
-    "rich-click>=1.9.7"
+    "rich-click>=1.9.7",
 ]
 
 [build-system]
@@ -25,7 +26,7 @@ include = ["assets", "utils", "utils.*"]
 py-modules = ["main", "config"]
 
 [tool.setuptools.package-data]
-assets = ["*.csv", "*.json", "demo/*"]
+assets = ["*.csv", "*.json", "*.txt", "demo/*"]
 
 [project.scripts]
 pycircdb = "main:cli"
