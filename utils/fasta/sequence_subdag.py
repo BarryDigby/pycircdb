@@ -115,23 +115,23 @@ def sequences__circpedia(
     return {per_sample_sequence.get("sample_name"): {'circpedia': df}}
 
 
-@config.when(db_name='circRNA_DB')
-def sequences__circRNA_DB(
+@config.when(db_name='circRNADb')
+def sequences__circRNADb(
     per_sample_sequence: PerSampleSequence
 ) -> Dict[str, Dict[str, pl.DataFrame]]:
     """
-    circRNA_DB, sequence
+    circRNADb, sequence
     """
     lookup_pl = per_sample_sequence.get("lookup_hits")
 
     query = (
         pl.scan_parquet(per_sample_sequence.get("sequence_tables"))
-        .filter(col("circRNA_DB").is_in(lookup_pl['circRNA_DB']))
+        .filter(col("circRNADb").is_in(lookup_pl['circRNADb']))
     )
 
     df = query.collect(streaming=True)
 
-    return {per_sample_sequence.get("sample_name"): {'circRNA_DB': df}}
+    return {per_sample_sequence.get("sample_name"): {'circRNADb': df}}
 
 
 @config.when(db_name='cscd')
@@ -170,6 +170,16 @@ def write_to_output_dir(
 
     sequence_hits = sequences.get(sample_name, {}).get(db_name)
 
+    assembly_map = {
+        "arraystar": "hg19",
+        "circRNADb": "hg19",
+        "circbank": "hg19",
+        "circbase": "hg19",
+        "circpedia": "hg38",
+        "cscd": "hg38",
+    }
+    assembly = assembly_map.get(db_name, "unknown")
+
     p = Path(output_dir).expanduser()
     if p.is_absolute():
         output_path = p / sample_name
@@ -178,6 +188,6 @@ def write_to_output_dir(
         output_path = Path(cwd_tmp)
 
     output_path.mkdir(parents=True, exist_ok=True)
-    output_file = output_path / f"{db_name}.fasta"
-    
+    output_file = output_path / f"{db_name}_{assembly}.fasta"
+
     parquet_to_fasta(sequence_hits, output_file)

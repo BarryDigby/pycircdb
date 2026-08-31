@@ -7,7 +7,7 @@ from typing import List, Dict
 from rich.console import Console
 from rich.text import Text
 
-from utils.md5sum_check import _load_expected_sums, _file_md5sum
+from utils.md5sum_check import _load_expected_sums, _file_md5sum, _get_db_prefix
 
 console = Console(stderr=True, highlight=False)
 
@@ -34,7 +34,8 @@ def _extract_required_chromosomes(lookup_results: Dict[str, Dict[str, pl.DataFra
             )
             chroms.update(chrom_series.unique().to_list())
 
-    chroms -= {None}
+    # Polars 1.x .str.split() on null can yield whitespace rather than null.
+    chroms = {c for c in chroms if c and str(c).strip()}
     return sorted(chroms)
 
 def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir_path: str = "tmp", verbose: int = 1) -> List[str]:
@@ -79,7 +80,8 @@ def fetch_rbp_tables(lookup_results: Dict[str, Dict[str, pl.DataFrame]], tmp_dir
         for filename in missing_files:
             if verbose >= 2:
                 console.print(f"  Downloading {filename}", style="cyan")
-            object_key = f"RBP/{filename}"
+            db_prefix = _get_db_prefix()
+            object_key = f"{db_prefix}/RBP/{filename}"
             local_path = os.path.join(local_dir, filename)
             
             try:

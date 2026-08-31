@@ -1,7 +1,16 @@
 import csv
 import hashlib
 import os
+from pathlib import Path
 from typing import Dict, List, Optional
+
+
+def _get_db_prefix() -> str:
+    """Return the versioned S3 directory prefix (e.g. 'v1_0') from assets/db_version.txt."""
+    assets_dir = Path(__file__).resolve().parent.parent / "assets"
+    db_version = (assets_dir / "db_version.txt").read_text().strip()
+    return "v" + db_version.replace(".", "_")
+
 
 
 def _file_md5sum(file_path: str) -> str:

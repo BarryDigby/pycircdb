@@ -1,0 +1,24 @@
+pycircdb execution report
+========================================
+Timestamp        : 2026-08-20 20:05:04
+pycircdb version : 0.1.5
+Database version : 1.0
+Config file      : /home/barry/Desktop/pycircdb/benchmarks/performance/configs/bench_100k.json
+
+Global Parameters
+--------------------
+  max_tasks: 1
+  output_dir: benchmarks/performance/results/bench_100k
+  tmp_dir: tmp
+
+Samples
+--------------------
+  bench_100k:
+    file_path : benchmarks/performance/inputs/bench_100k.txt
+    reference : hg19
+
+Databases & Algorithms
+--------------------
+  Annotation databases : arraystar, circatlas, circbank, circbase, circpedia, circrnadb, cscd, exorbase
+  FASTA databases      : arraystar, circbank, circbase, circpedia, circrnadb, cscd
+  miRNA algorithms     : miRanda, PITA, TargetScan

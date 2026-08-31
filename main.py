@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 import rich_click as click
 from typing import Tuple, List, Optional
-from config import create_config, load_config, print_config_panel
+from config import create_config, load_config, print_config_panel, write_execution_report
 
 # Workflow stuff
 from hamilton import driver
@@ -67,6 +67,9 @@ def process_pipeline(ctx, processors, config, verbose):
     for processor in processors:
         processor()
 
+    if cfg:
+        write_execution_report(cfg, config)
+
 @cli.command('init-demo')
 @click.option(
     "-f",
@@ -92,8 +95,8 @@ def init_demo(force):
 
     console.print(
         "\n[bold]Demo files ready.[/bold] Try it out with:\n"
-        "  [cyan]pycircdb -c test_config.json -v 2 annotate -d 'arraystar,circbase' "
-        "fasta -d 'arraystar,circbase' mirna -a 'miRanda,TargetScan' rbp[/cyan]"
+        "  [cyan]pycircdb -c test_config.json -v 2 annotate "
+        "fasta mirna rbp[/cyan]"
     )
 
     return lambda: None
@@ -104,7 +107,7 @@ def init_demo(force):
     "--database",
     type=str,
     required=False,
-    default="arraystar,circatlas,circbank,circbase,circpedia,circRNA_DB,CSCD,exorbase",
+    default="arraystar,circatlas,circbank,circbase,circpedia,circRNADb,CSCD,exorbase",
     show_default=True,
     help="Comma-separated list of databases to use."
 )
@@ -116,14 +119,14 @@ def annotate(ctx, database):
         raise click.UsageError("A config file must be provided via -c/--config before subcommands (e.g., main.py -c config.json annotate)")
 
     if database:
-        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase'}
+        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrnadb', 'cscd', 'exorbase'}
         parsed_dbs = [d.strip().lower() for d in database.split(',')]
         invalid_dbs = [d for d in parsed_dbs if d not in valid_dbs]
         if invalid_dbs:
             raise click.BadParameter(f"Invalid databases provided: {', '.join(invalid_dbs)}. Valid options are: {', '.join(sorted(valid_dbs))}")
         cfg['annotate_databases'] = parsed_dbs
     else:
-        cfg['annotate_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd', 'exorbase']
+        cfg['annotate_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrnadb', 'cscd', 'exorbase']
 
     def processor():
         lookup_dict = ctx.obj.get('lookup_dict')
@@ -137,7 +140,7 @@ def annotate(ctx, database):
     "--database",
     type=str,
     required=False,
-    default="arraystar,circbank,circbase,circpedia,circRNA_DB,CSCD",
+    default="arraystar,circbank,circbase,circpedia,circRNADb,CSCD",
     show_default=True,
     help="Comma-separated list of databases to use."
 )
@@ -149,14 +152,14 @@ def fasta(ctx, database):
         raise click.UsageError("A config file must be provided via -c/--config")
 
     if database:
-        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd'}
+        valid_dbs = {'arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrnadb', 'cscd'}
         parsed_dbs = [d.strip().lower() for d in database.split(',')]
         invalid_dbs = [d for d in parsed_dbs if d not in valid_dbs]
         if invalid_dbs:
             raise click.BadParameter(f"Invalid databases provided: {', '.join(invalid_dbs)}. Valid options are: {', '.join(sorted(valid_dbs))}")
         cfg['fasta_databases'] = parsed_dbs
     else:
-        cfg['fasta_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrna_db', 'cscd']
+        cfg['fasta_databases'] = ['arraystar', 'circatlas', 'circbank', 'circbase', 'circpedia', 'circrnadb', 'cscd']
 
     def processor():
         lookup_dict = ctx.obj.get('lookup_dict')
@@ -205,6 +208,8 @@ def rbp(ctx):
     cfg = ctx.obj.get('cfg')
     if not cfg:
         raise click.UsageError("A config file must be provided via -c/--config")
+
+    cfg['run_rbp'] = True
 
     def processor():
         lookup_dict = ctx.obj.get('lookup_dict')

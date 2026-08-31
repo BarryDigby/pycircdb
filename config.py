@@ -1,6 +1,8 @@
 import json
 import shutil
 import rich_click as click
+from datetime import datetime
+from importlib.metadata import version as pkg_version
 from rich.console import Console, Group
 from rich.panel import Panel
 from rich.text import Text
@@ -8,6 +10,10 @@ from rich.table import Table
 from rich import box
 from pathlib import Path
 from typing import List, Optional, TypedDict, Union
+from utils.md5sum_check import _get_db_prefix
+
+db_version = _get_db_prefix()
+db_version = db_version.replace("v", "").replace("_", ".")  # e.g. v1_0 -> 1.0
 
 console = Console(stderr=True, highlight=False)
 CONFIG_DIR = Path(__file__).parent.absolute()
@@ -144,7 +150,161 @@ def print_config_panel(config: ToolConfig, user_config_path: Optional[str] = Non
         sample_table,
         Text(""),
         Text("Databases & Algorithms:", style="bold white"),
-        db_table
+        db_table,
+        Text(f"Database version: {db_version}", style="bold white")
     )
 
     console.print(Panel(panel_group, title="[bold white]Workflow Configuration[/bold white]", border_style="green", expand=False))
+
+
+# (genome_build, version, accessed)
+_DB_META: dict[str, tuple[str, str, str]] = {
+    "arraystar": ("hg19", "2.0", "January 2025"),
+    "circatlas":  ("hg38", "3.0", "January 2026"),
+    "circbank":   ("hg19", "1.0", "January 2026"),
+    "circbase":   ("hg19", "1.0", "January 2026"),
+    "circnet":    ("hg19", "2.0", "January 2026"),
+    "circpedia":  ("hg38", "3.0", "October 2025"),
+    "circrnadb":  ("hg19", "1.0", "March 2026"),
+    "cscd":       ("hg38", "2.0", "January 2026"),
+    "exorbase":   ("hg38", "1.0", "May 2026"),
+}
+
+
+def write_execution_report(config: ToolConfig, config_path: Optional[str] = None) -> None:
+    """Write a plain-text execution report to the output directory."""
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_dir = Path(config.get("global_parameters", {}).get("output_dir", "results/"))
+    if not output_dir.is_absolute():
+        output_dir = Path.cwd() / output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        tool_version = pkg_version("pycircdb")
+    except Exception:
+        tool_version = "unknown"
+
+    lines = [
+        "pycircdb execution report",
+        "=" * 40,
+        f"Timestamp        : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"pycircdb version : {tool_version}",
+        f"Database version : {db_version}",
+        f"Config file      : {Path(config_path).resolve() if config_path else 'defaults'}",
+        "",
+        "Global Parameters",
+        "-" * 20,
+    ]
+    for k, v in config.get("global_parameters", {}).items():
+        lines.append(f"  {k}: {v}")
+
+    lines += ["", "Samples", "-" * 20]
+    for name, info in config.get("samples", {}).items():
+        lines.append(f"  {name}:")
+        lines.append(f"    file_path : {info.get('file_path', '')}")
+        lines.append(f"    reference : {info.get('reference', '')}")
+
+    ann_dbs  = config.get("annotate_databases") or []
+    fas_dbs  = config.get("fasta_databases")    or []
+    mir_algs = config.get("mirna_algorithms")   or []
+    run_rbp  = config.get("run_rbp", False)
+    if ann_dbs or fas_dbs or mir_algs or run_rbp    :
+        lines += ["", "Databases & Algorithms", "-" * 20]
+        if ann_dbs:  lines.append(f"  Annotation databases : {', '.join(ann_dbs)}")
+        if fas_dbs:  lines.append(f"  FASTA databases      : {', '.join(fas_dbs)}")
+        if mir_algs: lines.append(f"  miRNA algorithms     : {', '.join(mir_algs)}")
+
+    def _db_line(key: str) -> str:
+        build, ver, accessed = _DB_META.get(key.lower(), ("unknown", "unknown", "unknown"))
+        return f"    {key:<14}: {build}, version {ver}, accessed {accessed}"
+
+    prov_sections: list[tuple[str, list[str]]] = []
+    if ann_dbs:
+        prov_sections.append(("Annotation", ann_dbs))
+    if fas_dbs:
+        prov_sections.append(("FASTA", fas_dbs))
+    if mir_algs:
+        prov_sections.append(("miRNA", ["circnet", "cscd"]))
+    if run_rbp:
+        prov_sections.append(("RBP", ["cscd"]))
+    if prov_sections:
+        lines += ["", "Database Provenance", "-" * 20]
+        for section, dbs in prov_sections:
+            lines.append(f"  {section}")
+            for db in dbs:
+                lines.append(_db_line(db))
+
+    # ---------------------------------------------------------------------------
+    # Mapping statistics — scanned from result files after all modules complete
+    # ---------------------------------------------------------------------------
+    import csv as _csv, gzip as _gz
+
+    lines += ["", "Mapping Statistics", "-" * 30]
+
+    for sample_name, sample_info in config.get("samples", {}).items():
+        sample_dir = output_dir / sample_name
+        if not sample_dir.exists():
+            continue
+
+        if len(config.get("samples", {})) > 1:
+            lines.append(f"\n  [Sample: {sample_name}]")
+
+        try:
+            n_input = sum(1 for ln in Path(sample_info.get("file_path", "")).read_text().splitlines() if ln.strip())
+        except Exception:
+            n_input = None
+
+        def _fmt(n: int) -> str:
+            if n_input:
+                return f"[{n}/{n_input}] {100 * n / n_input:.1f}%"
+            return f"[{n} hits]"
+
+        # Annotation: one hits file per database
+        ann_files = sorted(sample_dir.glob("*_hits.txt"))
+        if ann_files:
+            lines.append("  Annotation")
+            for f in ann_files:
+                db = f.stem.replace("_hits", "")
+                n = max(0, sum(1 for _ in f.open()) - 1)   # subtract header row
+                lines.append(f"    {db:<18} {_fmt(n)}")
+
+        # FASTA: one fasta file per database (e.g. arraystar_hg19.fasta)
+        fasta_files = sorted(sample_dir.glob("*.fasta"))
+        if fasta_files:
+            lines.append("  FASTA")
+            for f in fasta_files:
+                db = f.stem.rsplit("_", 1)[0]
+                n = sum(1 for ln in f.open() if ln.startswith(">"))
+                lines.append(f"    {db:<18} {_fmt(n)}")
+
+        # miRNA: unique circRNAs per chromosome file
+        mirna_files = sorted(sample_dir.glob("hg38_*_mirna_hits.txt.gz"))
+        if mirna_files:
+            lines.append("  miRNA")
+            for f in mirna_files:
+                chrom = f.name.split("_mirna_")[0].replace("hg38_", "")
+                try:
+                    with _gz.open(f, "rt") as fh:
+                        unique = {row.get("circRNA", "") for row in _csv.DictReader(fh, delimiter="\t")}
+                    n = len(unique - {""})
+                except Exception:
+                    n = 0
+                lines.append(f"    {chrom:<18} {_fmt(n)}")
+
+        # RBP: unique circRNAs per chromosome file
+        rbp_files = sorted(sample_dir.glob("hg38_*_rbp_hits.txt.gz"))
+        if rbp_files:
+            lines.append("  RBP")
+            for f in rbp_files:
+                chrom = f.name.split("_rbp_")[0].replace("hg38_", "")
+                try:
+                    with _gz.open(f, "rt") as fh:
+                        unique = {row.get("circRNA", "") for row in _csv.DictReader(fh, delimiter="\t")}
+                    n = len(unique - {""})
+                except Exception:
+                    n = 0
+                lines.append(f"    {chrom:<18} {_fmt(n)}")
+
+    report_path = output_dir / f"execution_report_{timestamp}.txt"
+    report_path.write_text("\n".join(lines) + "\n")
+    console.print(Text(f"\u2713 Execution report written to {report_path}", style="bold green"))
