@@ -34,8 +34,7 @@ Global Options
    Path to the JSON configuration file.
 
 ``-v, --verbose``
-   Verbosity level. 0 = no output, 1 = errors only, 2 = errors and warnings,
-   3 = all output (default=1).
+   Verbosity level. 0 = Verification of workflow completion, 1 = Display scan results for existing database files, verification of workflow completion, 2 = Print workflow configuration, summary of all steps, verification of workflow completion. Default=1.
 
 ``-h, --help``
    Show this help message and exit.
@@ -89,7 +88,7 @@ Command-level Options
     ``-a, --algorithm``
         Comma-separated list of algorithms to use for miRNA binding site prediction. Options are
         ``miRanda`` and/or ``PITA`` and/or ``TargetScan``.
-        Not specifiying an algorithm will result in all algorithms being used.
+        Not specifiying an algorithm will result in all algorithms being used in 
     ``-h, --help``
         Show this help message and exit.
 

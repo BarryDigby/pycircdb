@@ -48,7 +48,7 @@ The command `pycircdb init-demo` will suggest a command to run, feel free to alt
 
 .. code-block:: bash
 
-    pycircdb -c test_config.json -v 2 annotate -d 'arraystar,circbase' fasta -d 'arraystar,circbase' mirna -a 'miRanda,TargetScan' rbp
+    pycircdb -c test_config.json -v 2 annotate fasta mirna rbp
 
 
 The demo will create the following output directory structure:
@@ -56,16 +56,23 @@ The demo will create the following output directory structure:
 .. code-block:: bash
 
     └── demo
-        └── demo_sample
-            ├── arraystar.fasta
-            ├── arraystar_hits.txt
-            ├── circbase.fasta
-            ├── circbase_hits.txt
-            ├── hg38_chr10_mirna_hits.txt.gz
-            ├── hg38_chr10_rbp_hits.txt.gz
-            ├── hg38_chr13_mirna_hits.txt.gz
-            ├── hg38_chr13_rbp_hits.txt.gz
-            ├── hg38_chr19_mirna_hits.txt.gz
-            └── hg38_chr19_rbp_hits.txt.gz
+        ├── demo_sample
+        │   ├── arraystar_hg19.fasta
+        │   ├── arraystar_hits.txt
+        │   ├── circatlas_hits.txt
+        │   ├── circbank_hg19.fasta
+        │   ├── circbank_hits.txt
+        │   ├── circbase_hg19.fasta
+        │   ├── circbase_hits.txt
+        │   ├── circpedia_hg38.fasta
+        │   ├── circpedia_hits.txt
+        │   ├── circRNADb_hg19.fasta
+        │   ├── circRNADb_hits.txt
+        │   ├── cscd_hg38.fasta
+        │   ├── cscd_hits.txt
+        │   ├── exorbase_hits.txt
+        │   ├── hg38_chr1_mirna_hits.txt.gz
+        │   └── hg38_chr1_rbp_hits.txt.gz
+        └── execution_report_YYYY-mm-dd_HH:MM:SS.txt
 
-    2 directories, 10 files
+    2 directories, 17 files
