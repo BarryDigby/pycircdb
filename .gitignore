@@ -16,8 +16,10 @@ venv/
 .coverage
 htmlcov/
 
-# Generated output
+# Generated outputs [demo]
 results/
 tmp/
 
-circbank.parquet
+# Allow benchmark time/resource stats for manuscript
+# benchmark results removed, users can recapitulate easily using py script in dir [file sizes]
+!benchmarks/performance/results

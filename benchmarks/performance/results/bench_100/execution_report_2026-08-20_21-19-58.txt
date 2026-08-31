@@ -1,0 +1,107 @@
+pycircdb execution report
+========================================
+Timestamp        : 2026-08-20 21:19:58
+pycircdb version : 0.1.5
+Database version : 1.0
+Config file      : /home/barry/Desktop/pycircdb/benchmarks/performance/configs/bench_100.json
+
+Global Parameters
+--------------------
+  max_tasks: 1
+  output_dir: benchmarks/performance/results/bench_100
+  tmp_dir: tmp
+
+Samples
+--------------------
+  bench_100:
+    file_path : benchmarks/performance/inputs/bench_100.txt
+    reference : hg19
+
+Databases & Algorithms
+--------------------
+  Annotation databases : arraystar, circatlas, circbank, circbase, circpedia, circrnadb, cscd, exorbase
+  FASTA databases      : arraystar, circbank, circbase, circpedia, circrnadb, cscd
+  miRNA algorithms     : miRanda, PITA, TargetScan
+
+Database Provenance
+--------------------
+  Annotation
+    arraystar     : hg19, version 2.0, accessed January 2025
+    circatlas     : hg38, version 3.0, accessed January 2026
+    circbank      : hg19, version 1.0, accessed January 2026
+    circbase      : hg19, version 1.0, accessed January 2026
+    circpedia     : hg38, version 3.0, accessed October 2025
+    circrnadb     : hg19, version 1.0, accessed March 2026
+    cscd          : hg38, version 2.0, accessed January 2026
+    exorbase      : hg38, version 1.0, accessed May 2026
+  FASTA
+    arraystar     : hg19, version 2.0, accessed January 2025
+    circbank      : hg19, version 1.0, accessed January 2026
+    circbase      : hg19, version 1.0, accessed January 2026
+    circpedia     : hg38, version 3.0, accessed October 2025
+    circrnadb     : hg19, version 1.0, accessed March 2026
+    cscd          : hg38, version 2.0, accessed January 2026
+  miRNA
+    circnet       : hg19, version 2.0, accessed January 2026
+    cscd          : hg38, version 2.0, accessed January 2026
+  RBP
+    cscd          : hg38, version 2.0, accessed January 2026
+
+Mapping Statistics
+------------------------------
+  Annotation
+    arraystar          [33/100] 33.0%
+    circRNADb          [52/100] 52.0%
+    circatlas          [94/100] 94.0%
+    circbank           [95/100] 95.0%
+    circbase           [49/100] 49.0%
+    circpedia          [84/100] 84.0%
+    cscd               [95/100] 95.0%
+    exorbase           [77/100] 77.0%
+  FASTA
+    arraystar          [33/100] 33.0%
+    circRNADb          [52/100] 52.0%
+    circbank           [95/100] 95.0%
+    circbase           [49/100] 49.0%
+    circpedia          [84/100] 84.0%
+    cscd               [95/100] 95.0%
+  miRNA
+    chr10              [7/100] 7.0%
+    chr11              [3/100] 3.0%
+    chr12              [9/100] 9.0%
+    chr13              [2/100] 2.0%
+    chr14              [2/100] 2.0%
+    chr15              [8/100] 8.0%
+    chr16              [1/100] 1.0%
+    chr17              [7/100] 7.0%
+    chr19              [3/100] 3.0%
+    chr1               [12/100] 12.0%
+    chr20              [1/100] 1.0%
+    chr2               [7/100] 7.0%
+    chr3               [9/100] 9.0%
+    chr4               [3/100] 3.0%
+    chr5               [7/100] 7.0%
+    chr6               [3/100] 3.0%
+    chr7               [7/100] 7.0%
+    chr8               [4/100] 4.0%
+    chr9               [1/100] 1.0%
+  RBP
+    chr10              [7/100] 7.0%
+    chr11              [3/100] 3.0%
+    chr12              [9/100] 9.0%
+    chr13              [2/100] 2.0%
+    chr14              [2/100] 2.0%
+    chr15              [8/100] 8.0%
+    chr16              [1/100] 1.0%
+    chr17              [7/100] 7.0%
+    chr19              [3/100] 3.0%
+    chr1               [12/100] 12.0%
+    chr20              [1/100] 1.0%
+    chr2               [7/100] 7.0%
+    chr3               [9/100] 9.0%
+    chr4               [3/100] 3.0%
+    chr5               [7/100] 7.0%
+    chr6               [3/100] 3.0%
+    chr7               [7/100] 7.0%
+    chr8               [4/100] 4.0%
+    chr9               [1/100] 1.0%
