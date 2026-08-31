@@ -106,11 +106,11 @@ Please see the [documentation](https://pycircdb.readthedocs.io/en/latest/) for a
   "samples": {
     "SRR5133906_circexplorer2": {
       "file_path": "reformatted/SRR5133906/SRR5133906_circexplorer2.txt",
-      "reference": "hg38"
+      "reference": "hg19"
     },
     "SRR5133906_ciriquant": {
       "file_path": "reformatted/SRR5133906/SRR5133906_ciriquant.txt",
-      "reference": "hg38"
+      "reference": "hg19"
     }
   }
 }
