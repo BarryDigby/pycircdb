@@ -527,11 +527,11 @@ miRNA output are a combination of CircNET and CSCD - for this reason, not all Ta
 
 .. code-block:: text
 
-    circRNA                     miRNA                  MSA_start  MSA_end  Site_type  Score   Energy  Algorithm
-    chr15:100048856-100054054|+   miR-1208               30.0       37.0     8mer-1a    144.0   -13.62  miRanda,TargetScan
-    chr15:100048856-100054054|+   miR-1237-5p/4488-5p                                   140.0   -20.01  miRanda
-    chr15:100048856-100054054|+   miR-1289                                              141.0   -22.95  miRanda
-    chr15:100048856-100054054|+   miR-141-5p             39.0       45.0     7mer-m8    178.0   -26.76  miRanda,TargetScan
+    hg19                          hg38                          miRNA                  MSA_start  MSA_end  Site_type  Score   Energy  Algorithm
+    chr15:100048856-100054054|+   chr15:100048856-100054054|+   miR-1208               30.0       37.0     8mer-1a    144.0   -13.62  miRanda,TargetScan
+    chr15:100048856-100054054|+   chr15:100048856-100054054|+   miR-1237-5p/4488-5p                                   140.0   -20.01  miRanda
+    chr15:100048856-100054054|+   chr15:100048856-100054054|+   miR-1289                                              141.0   -22.95  miRanda
+    chr15:100048856-100054054|+   chr15:100048856-100054054|+   miR-141-5p             39.0       45.0     7mer-m8    178.0   -26.76  miRanda,TargetScan
 
 .. list-table::
    :header-rows: 1
@@ -539,7 +539,9 @@ miRNA output are a combination of CircNET and CSCD - for this reason, not all Ta
 
    * - Column Name
      - Description
-   * - circRNA
+   * - hg19
+     - The circRNA coordinates in the hg19 reference genome.
+   * - hg38
      - The circRNA coordinates in the hg38 reference genome.
    * - miRNA
      - The miRNA ID.
@@ -561,10 +563,10 @@ RBP
 
 .. code-block:: text
 
-    circRNA                 Chr     Start       End         RBP_symbol  Information        RBP_numbers  source
-    chr18:12493071-12546904|+ chr18   12503834    12546883    AGO2        SBDH105-59581      24           common
-    chr18:12493071-12546904|+ chr18   12498779    12546872    FBL         SBDH120-145469     10           common
-    chr18:12493071-12546904|+ chr18   12493071    12546757    U2AF2       SBDH19-189369      100          common
+    hg19                       hg38                      Chr     Start       End         RBP_symbol  Information        RBP_numbers  source
+    chr18:12493071-12546904|+  chr18:12493071-12546904|+ chr18   12503834    12546883    AGO2        SBDH105-59581      24           common
+    chr18:12493071-12546904|+  chr18:12493071-12546904|+ chr18   12498779    12546872    FBL         SBDH120-145469     10           common
+    chr18:12493071-12546904|+  chr18:12493071-12546904|+ chr18   12493071    12546757    U2AF2       SBDH19-189369      100          common
 
 .. list-table::
    :header-rows: 1
@@ -572,7 +574,9 @@ RBP
 
    * - Column Name
      - Description
-   * - circRNA
+   * - hg19
+     - The circRNA coordinates in the hg19 reference genome.
+   * - hg38
      - The circRNA coordinates in the hg38 reference genome.
    * - Chr
      - Chromosome of the RBP binding site.

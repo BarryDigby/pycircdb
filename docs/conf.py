@@ -10,8 +10,8 @@ project = 'pycircdb'
 copyright = '2026, Barry Digby'
 author = 'Barry Digby'
 
-release = '0.1'
-version = '0.1.5'
+release = '1.0'
+version = '1.0.1'
 
 # -- General configuration
 

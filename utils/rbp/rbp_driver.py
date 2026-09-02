@@ -29,15 +29,18 @@ def broadcast_rbp(
     for sample_name, lookup_hits in lookup_dict.items():
         # Combine all hg38 IDs for this sample across all databases
         hg38_series = []
-        # Same code as mirna_driver below
+        # Map strand-stripped hg38 key -> stranded hg38/hg19 coordinates,
+        # so both can be restored on the output after the strand-less match.
         strand_frames = []
         for db_name, pl_hits in lookup_hits.items():
             if pl_hits.is_empty() or "hg38" not in pl_hits.columns:
                 continue
             hg38_series.append(pl_hits["hg38"].str.split("|").list.first())
+            hg19_col = pl.col("hg19") if "hg19" in pl_hits.columns else pl.lit(None, dtype=pl.Utf8).alias("hg19")
             strand_frames.append(pl_hits.select(
                 pl.col("hg38").str.split("|").list.first().alias("_hg38_key"),
-                pl.col("hg38").alias("circRNA"),
+                pl.col("hg38"),
+                hg19_col,
             ))
 
         if not hg38_series:
@@ -48,7 +51,7 @@ def broadcast_rbp(
         # Prefer stranded coordinates when de-duplicating the strand-less key.
         strand_map = (
             pl.concat(strand_frames)
-            .sort("circRNA")
+            .sort("hg38")
             .unique(subset="_hg38_key", keep="last")
         )
 
@@ -88,16 +91,20 @@ def rbp_hits(broadcast_rbp: RBPBroadcast) -> None:
     
     if not df.is_empty():
         # The RBP table's circRNA column is the strand-stripped hg38 key.
-        # Join back to restore the strand onto the circRNA coordinate.
+        # Join back to restore stranded hg38/hg19 coordinates onto the output.
         if strand_map is not None and strand_map.height > 0:
             df = (
                 df.rename({"circRNA": "_hg38_key"})
                 .join(strand_map, on="_hg38_key", how="left")
-                # Fall back to the strand-less key if a coordinate is unmapped.
-                .with_columns(pl.col("circRNA").fill_null(pl.col("_hg38_key")))
+                # Fall back to the strand-less key if hg38 is unmapped.
+                .with_columns(pl.col("hg38").fill_null(pl.col("_hg38_key")))
             )
-            ordered = ["circRNA"] + [c for c in df.columns if c not in ("circRNA", "_hg38_key")]
-            df = df.select(ordered)
+        else:
+            # No strand info available: fall back to the strand-less key for hg38.
+            df = df.rename({"circRNA": "hg38"}).with_columns(pl.lit(None, dtype=pl.Utf8).alias("hg19"))
+
+        ordered = ["hg19", "hg38"] + [c for c in df.columns if c not in ("hg19", "hg38", "_hg38_key")]
+        df = df.select(ordered)
 
         p = Path(output_dir)
         if p.is_absolute():
