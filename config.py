@@ -238,6 +238,7 @@ def write_execution_report(config: ToolConfig, config_path: Optional[str] = None
     # Mapping statistics — scanned from result files after all modules complete
     # ---------------------------------------------------------------------------
     import csv as _csv, gzip as _gz
+    from collections import Counter as _Counter
 
     lines += ["", "Mapping Statistics", "-" * 30]
 
@@ -263,15 +264,48 @@ def write_execution_report(config: ToolConfig, config_path: Optional[str] = None
         ann_files = sorted(sample_dir.glob("*_hits.txt"))
         if ann_files:
             lines.append("  Annotation")
+            # circRNA -> native DB ID matching can be one-to-many in either build
+            # (e.g. segmentally duplicated loci), which inflates raw hit counts
+            # past 100%. Track duplicated hg19/hg38 loci per db so they can be
+            # reported separately, and dedupe on the sample's own reference
+            # build to keep the percentage meaningful.
+            reference = str(sample_info.get("reference", "")).lower()
+            multi_mappers: dict = {}
             for f in ann_files:
                 db = f.stem.replace("_hits", "")
-                n = max(0, sum(1 for _ in f.open()) - 1)   # subtract header row
+                with f.open(newline="") as fh:
+                    rows = list(_csv.DictReader(fh, delimiter="\t"))
+                fieldnames = rows[0].keys() if rows else []
+
+                if reference in ("hg19", "hg38") and reference in fieldnames:
+                    n = len({row[reference] for row in rows if row.get(reference, "").strip()})
+                else:
+                    n = len(rows)
                 lines.append(f"    {db:<18} {_fmt(n)}")
+
+                for build in ("hg19", "hg38"):
+                    if build not in fieldnames:
+                        continue
+                    # Some source databases store a blank placeholder (e.g. a single
+                    # whitespace char) where a coordinate failed to cross-map builds.
+                    counts = _Counter(row[build] for row in rows if row.get(build, "").strip())
+                    duplicates = sorted(val for val, cnt in counts.items() if cnt > 1)
+                    if duplicates:
+                        multi_mappers.setdefault(db, {})[build] = duplicates
+
+            if multi_mappers:
+                lines += ["", "    Multi-Mappers"]
+                for db, builds in multi_mappers.items():
+                    lines.append(f"      {db}")
+                    for build, loci in builds.items():
+                        lines.append(f"        {build}:")
+                        for locus in loci:
+                            lines.append(f"          - {locus}")
 
         # FASTA: one fasta file per database (e.g. arraystar_hg19.fasta)
         fasta_files = sorted(sample_dir.glob("*.fasta"))
         if fasta_files:
-            lines.append("  FASTA")
+            lines += ["", "  FASTA"]
             for f in fasta_files:
                 db = f.stem.rsplit("_", 1)[0]
                 n = sum(1 for ln in f.open() if ln.startswith(">"))
@@ -280,12 +314,12 @@ def write_execution_report(config: ToolConfig, config_path: Optional[str] = None
         # miRNA: unique circRNAs per chromosome file
         mirna_files = sorted(sample_dir.glob("hg38_*_mirna_hits.txt.gz"))
         if mirna_files:
-            lines.append("  miRNA")
+            lines += ["", "  miRNA"]
             for f in mirna_files:
                 chrom = f.name.split("_mirna_")[0].replace("hg38_", "")
                 try:
                     with _gz.open(f, "rt") as fh:
-                        unique = {row.get("circRNA", "") for row in _csv.DictReader(fh, delimiter="\t")}
+                        unique = {row.get("hg38", "") for row in _csv.DictReader(fh, delimiter="\t")}
                     n = len(unique - {""})
                 except Exception:
                     n = 0
@@ -294,12 +328,12 @@ def write_execution_report(config: ToolConfig, config_path: Optional[str] = None
         # RBP: unique circRNAs per chromosome file
         rbp_files = sorted(sample_dir.glob("hg38_*_rbp_hits.txt.gz"))
         if rbp_files:
-            lines.append("  RBP")
+            lines += ["", "  RBP"]
             for f in rbp_files:
                 chrom = f.name.split("_rbp_")[0].replace("hg38_", "")
                 try:
                     with _gz.open(f, "rt") as fh:
-                        unique = {row.get("circRNA", "") for row in _csv.DictReader(fh, delimiter="\t")}
+                        unique = {row.get("hg38", "") for row in _csv.DictReader(fh, delimiter="\t")}
                     n = len(unique - {""})
                 except Exception:
                     n = 0

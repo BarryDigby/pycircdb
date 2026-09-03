@@ -76,7 +76,7 @@ An example report is shown below:
 
     Mapping Statistics
     ------------------------------
-      -- Annotation
+         Annotation
            arraystar          [33/100] 33.0%
            circatlas          [94/100] 94.0%
            circbank           [95/100] 95.0%
@@ -85,21 +85,30 @@ An example report is shown below:
            circrnadb          [52/100] 52.0%
            cscd               [95/100] 95.0%
            exorbase           [77/100] 77.0%
-      -- FASTA
+
+          Multi-Mappers
+            circatlas
+              hg19:
+                - chr10:47121120-47122996|-
+                
+         FASTA
            arraystar          [33/100] 33.0%
            circbank           [95/100] 95.0%
            circbase           [49/100] 49.0%
            circpedia          [84/100] 84.0%
            circrnadb          [52/100] 52.0%
            cscd               [95/100] 95.0%
-      -- miRNA
+
+         miRNA
            chr1               [12/100] 12.0%
            chr2               [7/100] 7.0%
            ...
-      -- RBP
+           
+         RBP
            chr1               [12/100] 12.0%
            chr2               [7/100] 7.0%
            ...
+
 
 
 Annotation
