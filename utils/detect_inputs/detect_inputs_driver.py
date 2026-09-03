@@ -25,7 +25,7 @@ def instantiate_driver(config: Dict[str, Any], verbose: int = 1):
     )
 
     result = dr.execute(
-        ['return_collected_results'], 
+        ['return_collected_results', 'write_no_hits'], 
         inputs={'config': config, 'lookup_tables': lookup_tables}
     )['return_collected_results']
 
