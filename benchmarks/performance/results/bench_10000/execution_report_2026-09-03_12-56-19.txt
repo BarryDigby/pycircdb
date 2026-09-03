@@ -1,0 +1,135 @@
+pycircdb execution report
+========================================
+Timestamp        : 2026-09-03 12:56:19
+pycircdb version : 1.0.1
+Database version : 1.0
+Config file      : /home/barry/Desktop/pycircdb/benchmarks/performance/configs/bench_10000.json
+
+Global Parameters
+--------------------
+  max_tasks: 1
+  output_dir: benchmarks/performance/results/bench_10000
+  tmp_dir: tmp
+
+Samples
+--------------------
+  bench_10000:
+    file_path : benchmarks/performance/inputs/bench_10000.txt
+    reference : hg19
+
+Databases & Algorithms
+--------------------
+  Annotation databases : arraystar, circatlas, circbank, circbase, circpedia, circrnadb, cscd, exorbase
+  FASTA databases      : arraystar, circbank, circbase, circpedia, circrnadb, cscd
+  miRNA algorithms     : miRanda, PITA, TargetScan
+
+Database Provenance
+--------------------
+  Annotation
+    arraystar     : hg19, version 2.0, accessed January 2025
+    circatlas     : hg38, version 3.0, accessed January 2026
+    circbank      : hg19, version 1.0, accessed January 2026
+    circbase      : hg19, version 1.0, accessed January 2026
+    circpedia     : hg38, version 3.0, accessed October 2025
+    circrnadb     : hg19, version 1.0, accessed March 2026
+    cscd          : hg38, version 2.0, accessed January 2026
+    exorbase      : hg38, version 1.0, accessed May 2026
+  FASTA
+    arraystar     : hg19, version 2.0, accessed January 2025
+    circbank      : hg19, version 1.0, accessed January 2026
+    circbase      : hg19, version 1.0, accessed January 2026
+    circpedia     : hg38, version 3.0, accessed October 2025
+    circrnadb     : hg19, version 1.0, accessed March 2026
+    cscd          : hg38, version 2.0, accessed January 2026
+  miRNA
+    circnet       : hg19, version 2.0, accessed January 2026
+    cscd          : hg38, version 2.0, accessed January 2026
+  RBP
+    cscd          : hg38, version 2.0, accessed January 2026
+
+Mapping Statistics
+------------------------------
+  Annotation
+    arraystar          [2850/10000] 28.5%
+    circRNADb          [5431/10000] 54.3%
+    circatlas          [9495/10000] 95.0%
+    circbank           [9594/10000] 95.9%
+    circbase           [4664/10000] 46.6%
+    circpedia          [8579/10000] 85.8%
+    cscd               [9628/10000] 96.3%
+    exorbase           [7752/10000] 77.5%
+
+    Multi-Mappers
+      circpedia
+        hg19:
+          - chr1:145015859-145021167|-
+          - chr1:206566045-206567030|+
+          - chr9:70863721-70875912|+
+      cscd
+        hg19:
+          - chr1:206566045-206567030|+
+      exorbase
+        hg19:
+          - chr1:206566045-206567030|+
+          - chr9:70863721-70875912|+
+          - chr9:70863721-70875917|+
+
+  FASTA
+    arraystar          [2850/10000] 28.5%
+    circRNADb          [5431/10000] 54.3%
+    circbank           [9594/10000] 95.9%
+    circbase           [4664/10000] 46.6%
+    circpedia          [8583/10000] 85.8%
+    cscd               [9629/10000] 96.3%
+
+  miRNA
+    chr10              [458/10000] 4.6%
+    chr11              [382/10000] 3.8%
+    chr12              [501/10000] 5.0%
+    chr13              [245/10000] 2.5%
+    chr14              [314/10000] 3.1%
+    chr15              [414/10000] 4.1%
+    chr16              [295/10000] 3.0%
+    chr17              [410/10000] 4.1%
+    chr18              [239/10000] 2.4%
+    chr19              [234/10000] 2.3%
+    chr1               [1001/10000] 10.0%
+    chr20              [191/10000] 1.9%
+    chr21              [103/10000] 1.0%
+    chr22              [161/10000] 1.6%
+    chr2               [930/10000] 9.3%
+    chr3               [657/10000] 6.6%
+    chr4               [500/10000] 5.0%
+    chr5               [554/10000] 5.5%
+    chr6               [490/10000] 4.9%
+    chr7               [578/10000] 5.8%
+    chr8               [384/10000] 3.8%
+    chr9               [443/10000] 4.4%
+    chrX               [200/10000] 2.0%
+    chrY               [1/10000] 0.0%
+
+  RBP
+    chr10              [456/10000] 4.6%
+    chr11              [382/10000] 3.8%
+    chr12              [500/10000] 5.0%
+    chr13              [245/10000] 2.5%
+    chr14              [312/10000] 3.1%
+    chr15              [411/10000] 4.1%
+    chr16              [293/10000] 2.9%
+    chr17              [410/10000] 4.1%
+    chr18              [239/10000] 2.4%
+    chr19              [233/10000] 2.3%
+    chr1               [997/10000] 10.0%
+    chr20              [190/10000] 1.9%
+    chr21              [103/10000] 1.0%
+    chr22              [161/10000] 1.6%
+    chr2               [930/10000] 9.3%
+    chr3               [656/10000] 6.6%
+    chr4               [498/10000] 5.0%
+    chr5               [553/10000] 5.5%
+    chr6               [489/10000] 4.9%
+    chr7               [576/10000] 5.8%
+    chr8               [381/10000] 3.8%
+    chr9               [442/10000] 4.4%
+    chrX               [200/10000] 2.0%
+    chrY               [1/10000] 0.0%

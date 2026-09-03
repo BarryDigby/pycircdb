@@ -1,7 +1,7 @@
 pycircdb execution report
 ========================================
-Timestamp        : 2026-08-20 21:19:58
-pycircdb version : 0.1.5
+Timestamp        : 2026-09-03 12:55:30
+pycircdb version : 1.0.1
 Database version : 1.0
 Config file      : /home/barry/Desktop/pycircdb/benchmarks/performance/configs/bench_100.json
 
@@ -58,6 +58,7 @@ Mapping Statistics
     circpedia          [84/100] 84.0%
     cscd               [95/100] 95.0%
     exorbase           [77/100] 77.0%
+
   FASTA
     arraystar          [33/100] 33.0%
     circRNADb          [52/100] 52.0%
@@ -65,6 +66,7 @@ Mapping Statistics
     circbase           [49/100] 49.0%
     circpedia          [84/100] 84.0%
     cscd               [95/100] 95.0%
+
   miRNA
     chr10              [7/100] 7.0%
     chr11              [3/100] 3.0%
@@ -85,6 +87,7 @@ Mapping Statistics
     chr7               [7/100] 7.0%
     chr8               [4/100] 4.0%
     chr9               [1/100] 1.0%
+
   RBP
     chr10              [7/100] 7.0%
     chr11              [3/100] 3.0%
