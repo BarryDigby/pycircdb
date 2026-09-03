@@ -86,10 +86,10 @@ An example report is shown below:
            cscd               [95/100] 95.0%
            exorbase           [77/100] 77.0%
 
-          Multi-Mappers
-            circatlas
-              hg19:
-                - chr10:47121120-47122996|-
+           Multi-Mappers
+             circatlas
+               hg19:
+                 - chr10:47121120-47122996|-
                 
          FASTA
            arraystar          [33/100] 33.0%
@@ -103,7 +103,7 @@ An example report is shown below:
            chr1               [12/100] 12.0%
            chr2               [7/100] 7.0%
            ...
-           
+
          RBP
            chr1               [12/100] 12.0%
            chr2               [7/100] 7.0%
