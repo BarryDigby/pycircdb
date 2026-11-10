@@ -8,7 +8,7 @@
 ##### Explore the [documentation](https://pycircdb.readthedocs.io/en/latest/) to get up and running!
 ![Database Version](https://img.shields.io/badge/database-v1.0-blue)
 [![PyPI Version](https://img.shields.io/pypi/v/pycircdb)](https://pypi.python.org/pypi/pycircdb/)
-[![DOI](https://img.shields.io/badge/DOI-pending-red.svg)](#)
+[![DOI](https://img.shields.io/badge/DOI-10.1093%2Fbioadv%2Fvbag311-blue.svg)](https://doi.org/10.1093/bioadv/vbag311)
 
 ---
 
@@ -118,28 +118,32 @@ Please see the [documentation](https://pycircdb.readthedocs.io/en/latest/) for a
 
 ### Commands
 
-For a full description of pycircdb commands and their options, please refer to the [documentation](https://pycircdb.readthedocs.io/en/latest/).
+For a full description of pycircdb commands and their options, please refer to the [docum## Citation
 
+Please consider citing pycircdb if you use it in your analysis.
 
-## Citation
-
-Please consider citing pycircdb if you use it in your analysis
-
-> **pycircdb: integrated circRNA database annotation for computational workflows** <br> _Barry Digby, Stephen Finn, Pilib Ó Broin_ <br>
-> Pending (2026) <br>
-> doi: [pending](pending)) <br>
-> PMID: [pending](pending)
+> **pycircdb: integrated circRNA database annotation for computational workflows** <br> _Barry Digby, Stephen P Finn, Pilib Ó Broin_ <br>
+> *Bioinformatics Advances*, 6(1), vbag311 (2026) <br>
+> doi: [10.1093/bioadv/vbag311](https://doi.org/10.1093/bioadv/vbag311)
 
 ```BibTeX
-@article{pending,
- author = {Digby, Barry and Finn, Stephen and Ó Broin, Pilib},
- title = {pycircdb: integrated circRNA database annotation for computational workflows},
- journal = {pending},
- volume = {pending},
- number = {pending},
- pages = {pending},
- year = {pending},
- doi = {pending},
+@article{Digby2026pycircdb,
+    author = {Digby, Barry and Finn, Stephen P and Broin, Pilib Ó},
+    title = {pycircdb: integrated circRNA database annotation for computational workflows},
+    journal = {Bioinformatics Advances},
+    volume = {6},
+    number = {1},
+    pages = {vbag311},
+    year = {2026},
+    month = {01},
+    issn = {2635-0041},
+    doi = {10.1093/bioadv/vbag311},
+    url = {https://doi.org/10.1093/bioadv/vbag311},
+    eprint = {https://academic.oup.com/bioinformaticsadvances/article-pdf/6/1/vbag311/71964362/vbag311.pdf},
+}
+```
+
+ {pending},
  URL = {pending},
  eprint = {pending}
 }
