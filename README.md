@@ -118,7 +118,9 @@ Please see the [documentation](https://pycircdb.readthedocs.io/en/latest/) for a
 
 ### Commands
 
-For a full description of pycircdb commands and their options, please refer to the [docum## Citation
+For a full description of pycircdb commands and their options, please refer to the [documentation](https://pycircdb.readthedocs.io/en/latest/).
+
+## Citation
 
 Please consider citing pycircdb if you use it in your analysis.
 
