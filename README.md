@@ -145,12 +145,6 @@ Please consider citing pycircdb if you use it in your analysis.
 }
 ```
 
- {pending},
- URL = {pending},
- eprint = {pending}
-}
-```
-
 ## Contributions & Support
 
 Contributions, particularly new circRNA database resources are welcome, as are bug reports!
